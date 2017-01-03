@@ -56,11 +56,7 @@ var GameServer = function() {
 
     this.roomCount++;
 
-    var aiSocket = { id: random(1, 1000000000) };
-    var ai = new Player(aiSocket, "AI", true);
-    Player.list[ai.id] = ai;
-    room.joinAI(ai);
-    room.pushPlayerToInitPack(ai);
+    room.createAI();
   }
 
   this.updateRooms = function() {
@@ -130,7 +126,10 @@ var Game = function(player) {
     this.sendPackage('init', { players: this.players, balls: this.balls });
   }
 
-  this.joinAI = function(ai) {
+  this.createAI = function() {
+    var aiSocket = { id: random(1, 1000000000) };
+    var ai = new Player(aiSocket, "AI", true);
+    Player.list[ai.id] = ai;
     if(this.players[1] !== undefined) {
       ai.localId = 2;
     } else {
@@ -138,6 +137,7 @@ var Game = function(player) {
     }
     this.players[ai.localId] = ai;
     this.assignAttributesToPlayer(ai);
+    this.pushPlayerToInitPack(ai);
   }
 
   this.ballIntercept = function(ball, player, dx, dy, ai) {
@@ -706,6 +706,7 @@ Player.onDisconnect = function(socket) {
       delete gameServer.rooms[player.roomId];
       gameServer.roomCount--;
     } else {
+      room.createAI();
       room.removePack.push(player.id);
     }
     delete Player.list[socket.id];
