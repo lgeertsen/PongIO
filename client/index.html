@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PONG IO</title>
+  <link type="text/css" rel="stylesheet" href="/client/css/materialize.css"  media="screen,projection"/>
+  <link href="/client/css/style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="container">
+    <div id="startMenuWrapper">
+      <div id="startMenu">
+            <p>PONG IO</p>
+            <form id="start-form">
+              <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="playerNameInput" autocomplete="off"/>
+              <b id="input-error">Nick name must be alphanumeric characters only!</b>
+              <br />
+              <button id="startButton" type="submit">Play</button>
+            </form>
+        </div>
+    </div>
+    <div id="gameAreaWrapper" style="display: none;">
+      <div id="gameWrapper">
+        <canvas id="ctx" width="640" height="480"></canvas>
+      </div>
+      <div id="chat">
+        <div id="chat-text"></div>
+
+        <form id="chat-form">
+          <input id="chat-input" type="text" autocomplete="off"/>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="/client/js/jquery.js"></script>
+  <script src="/client/js/materialize.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/client/js/app.js"></script>
+</body>
+</html>
