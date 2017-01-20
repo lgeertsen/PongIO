@@ -238,15 +238,15 @@ var Game = function(player) {
   }
 
   this.predict = function(ai, ball) {
-    if(ai.prediction &&
-       (ai.prediction.spdX * ball.spdX > 0) &&
-       (ai.prediction.spdY * ball.spdY > 0) &&
-       (ai.prediction.since < ai.level.aiReaction)) {
-      ai.prediction.since += 1/60;
-      return;
-    }
+    // if(ai.prediction &&
+    //    (ai.prediction.spdX * ball.spdX > 0) &&
+    //    (ai.prediction.spdY * ball.spdY > 0) &&
+    //    (ai.prediction.since < ai.level.aiReaction)) {
+    //   ai.prediction.since += 1/60;
+    //   return;
+    // }
 
-    var intercept = this.ballIntercept(ball, { left: ai.left, right: ai.right, top: -10000, bottom: 10000 }, ball.x + ball.spdX * 10, ball.x + ball.spdY * 10, true );
+    var intercept = this.ballIntercept(ball, { left: ai.left, right: ai.right, top: -4800, bottom: 4800 }, ball.x + ball.spdX * 10, ball.x + ball.spdY * 10, true );
 
     if(intercept) {
       var top = ai.minY + ball.radius;
@@ -581,7 +581,7 @@ var Ball = function(game) {
 ///////////////////////////
 
 var LEVELS = [
-  { aiReaction: 0.2, aiError:  40 }, // 0:  ai is losing by 8
+  { aiReaction: 0.2, aiError:  0 }, // 0:  ai is losing by 8
   { aiReaction: 0.3, aiError:  50 }, // 1:  ai is losing by 7
   { aiReaction: 0.4, aiError:  60 }, // 2:  ai is losing by 6
   { aiReaction: 0.5, aiError:  70 }, // 3:  ai is losing by 5
