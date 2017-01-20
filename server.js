@@ -1,6 +1,10 @@
+// Mettre bibliothèque express dans une variable
 var express = require('express');
+// Creation d'une application express
 var app = express();
+// Creation d'un server express
 var server = require('http').Server(app);
+// Utilisation de socket.io par le server express
 var io = require('socket.io')(server, {});
 
 var SOCKET_LIST = {};
@@ -9,13 +13,16 @@ var SOCKET_LIST = {};
 //        EXPRESS        //
 ///////////////////////////
 
+// Creation du lien '/' et passer le fichier index.html au client
 app.get('/', function(req, res) {
   console.log(":: HTTP :: Loading file: " + __dirname + "/index.html");
   res.sendFile(__dirname + '/client/index.html');
 });
 
+// Rendre le dossier client public
 app.use('/client', express.static(__dirname + '/client'));
 
+// Demarrer le serveur sur le port definie par le système sinon port 3000
 server.listen(process.env.PORT || 3000);
 console.log(":: Express :: Listening on port 3000");
 
@@ -25,50 +32,56 @@ console.log(":: Express :: Listening on port 3000");
 //      GAME SERVER      //
 ///////////////////////////
 
+// La classe GameServer gère la creation, ... des jeux
 var GameServer = function() {
-  this.rooms = {};
-  this.roomCount = 0;
+  this.roomCount = 0;  // Nombre de jeux en cours
+  this.rooms = {};     // Liste des jeux
 
+  // Fonction pour trouver un jeu pour un joueur
   this.findGame = function(player) {
     console.log("looking for a game. We have: " + this.roomCount + " games.");
-    if(this.roomCount) {
-      for(var i in this.rooms) {
-        if(player.joinedGame) {
+
+    if(this.roomCount) { // Si il y a des jeux
+      for(var i in this.rooms) { // On va regarder dans chaque chambre
+        if(player.joinedGame) { // Si le joueur a rejoint une chambre on quitte le for loop
           break;
-        }
-        if(this.rooms[i].playerCount < this.rooms[i].maxPlayers) {
-          this.rooms[i].joinPlayer(player);
-        }
-      }
+        } // fin if
+        if(this.rooms[i].playerCount < this.rooms[i].maxPlayers) { // Si le nombre des joueurs dans le jeu est plus petit que le max des joueurs du jeu
+          this.rooms[i].joinPlayer(player); // Appel de la fonction pour rejoindre un jeu
+        } // fin if
+      } // fin for
 
-      if(!player.joinedGame) {
-        this.createGame(player);
+      if(!player.joinedGame) { // Si tout les jeux sont plein
+        this.createGame(player); // Créer un nouveau jeu pour ce joueur
       }
-    } else {
-      this.createGame(player);
-    }
-  }
+    } else { // Si il n'y a pas des jeux
+      this.createGame(player); // Créer un nouveau jeu pour ce joueur
+    } // fin if
+  } // fin findGame
 
+  // Fontion pour créer un nouveau jeu pour un joueur
   this.createGame = function(player) {
-    var room = new Game(player);
+    var room = new Game(player);  // Creation du jeu
 
-    this.rooms[room.id] = room;
+    this.rooms[room.id] = room;  // Ajouter le jeu au liste des jeux
 
-    this.roomCount++;
+    this.roomCount++;  // Incrementer le compteur des jeux
 
-    room.createAI();
-  }
+    room.createAI();  // Mettre des AI sur tout les places vide du jeu
+  } // fin createGame
 
+  // Mettre a jour tout les chambres
   this.updateRooms = function() {
-    for(var i in gameServer.rooms) {
+    for(var i in gameServer.rooms) { // Pour chaque chambre
       var room = gameServer.rooms[i];
-      room.initPlayers();
-      room.update();
-      room.removePlayers();
-    }
-  }
-};
+      room.initPlayers(); // Si il y a un nouveau joueur, ce fonction envoie les donnees du nouveau joueur a tout les joueurs
+      room.update(); // Envoie la mise du jeu à tout les joueurs (coordonées des joueurs, du ball)
+      room.removePlayers(); // Si un joueur quitte le jeu, dire aux autres qui à quitté
+    } // fin for
+  } // fin updateRooms
+}; // fin classe GameServer
 
+// Creation du GameServer
 var gameServer = new GameServer();
 
 
@@ -77,107 +90,109 @@ var gameServer = new GameServer();
 //         GAME          //
 ///////////////////////////
 
-var Game = function(player) {
-  this.id = random(1, 1000000000);
-  player.localId = 1;
-  this.maxPlayers = 2;
-  this.players = {};
-  this.players[player.localId] = player;
-  this.playerCount = 1;
-
-  this.width = 640;
-  this.height = 480;
-  this.wallWidth = 12;
-  this.court = new Court(this);
-  this.ballCount = 1;
-  this.constructBalls = function() {
+// Une objet de la classe game gère un jeu
+var Game = function(player) { // Le premier joueur est passer à la création du jeu
+  this.id = random(1, 1000000000);        // Le id du jeu
+  player.localId = 1;                     // Le id local du joueur, c-a-d le nb du jouer dans le jeu
+  this.maxPlayers = 2;                    // Le nombre max des joueurs dans le jeu
+  this.players = {};                      // La liste des joueurs dans le jeu
+  this.players[player.localId] = player;  // Ajouter le premier à la liste des joueurs
+  this.playerCount = 1;                   // Le nombre de joueurs dans le jeu
+  this.width = 640;                       // la longeur du jeu (pour la map)
+  this.height = 480;                      // La hauteur du jeu (pour la map)
+  this.wallWidth = 12;                    // L'épaisseur des murs
+  this.court = new Court(this);           // Création du map
+  this.ballCount = 1;                     // Le nombre de balls dans le jeu
+  this.constructBalls = function() {      // Creation de tout les balls
     var balls = [];
     for(var n = 0 ; n < this.ballCount ; n++)
-      balls.push(new Ball(this));
-    return balls;
+      balls.push(new Ball(this)); // Création d'une balle et la mettre dans la liste balls
+    return balls; // Renvoyer la liste des balls
   }
-  this.balls = this.constructBalls();
+  this.balls = this.constructBalls();     // Création de tout les balls pour le jeu
 
-  this.initPack = {
+  this.initPack = { // Le pack de initialization
     players: [],
     balls: []
   };
-  this.removePack = [];
+  this.removePack = []; // Le pack pour le remove
 
-  this.assignAttributesToPlayer = function(player) {
-    player.roomId = this.id;
-    player.minY = this.wallWidth;
-    player.maxY = this.height - this.wallWidth - player.height;
-    player.setPlayerPosition(player.localId, this.width);
-  }
+  this.assignAttributesToPlayer = function(player) { // Donner des attributs à un jouer qui à rejoint le jeu
+    player.roomId = this.id;  // Attribution de l'id du jeu au variable roomId du joueur
+    player.minY = this.wallWidth; // Limite min de déplacement pour le joueur
+    player.maxY = this.height - this.wallWidth - player.height; // Limite max de déplacement pour le joueur
+    player.setPlayerPosition(player.localId, this.width); // Placer le joueur
+  } // fin assignAttributesToPlayer
 
-  this.joinPlayer = function(player) {
-    if(this.players[1] !== undefined && !this.players[1].isAI) {
-      player.localId = 2;
-      this.removePack.push(this.players[2].id);
+  this.joinPlayer = function(player) { // Ajouter un joueur au jeu
+    if(this.players[1] !== undefined && !this.players[1].isAI) { // si le le jouer 1 existe, ou c'est pas un AI
+      player.localId = 2; // Le joueur devient joueur 2
+      this.removePack.push(this.players[2].id); // Le AI est supprimé
     } else {
-      player.localId = 1;
+      player.localId = 1; // Le joueur devient joueur 1
     }
-    this.players[player.localId] = player;
-    this.playerCount++;
-    this.assignAttributesToPlayer(player);
-    player.joinedGame = true;
-    this.sendCourt(this.court);
-    this.sendPackage('init', { players: this.players, balls: this.balls });
-  }
+    this.players[player.localId] = player; // Le joueur est ajouté au liste des joueurs du jeu
+    this.playerCount++; // Incrementation du compteur de joueurs
+    this.assignAttributesToPlayer(player); // Ajouter des attributs au joueur
+    player.joinedGame = true; // Le joueur à rejoint un jeu
+    this.sendCourt(this.court); // Envoyer le map au joueur
+    this.sendPackage('init', { players: this.players, balls: this.balls }); // Envoyer les infos de toutes les joueurs et balls existant au nouveau joueur
+  } // fin joinPlayer
 
-  this.createAI = function() {
-    var aiSocket = { id: random(1, 1000000000) };
-    var ai = new Player(aiSocket, "AI", true);
-    Player.list[ai.id] = ai;
-    if(this.players[1] !== undefined) {
-      ai.localId = 2;
+  this.createAI = function() { // Fonction pour la creation d'un AI
+    var aiSocket = { id: random(1, 1000000000) }; // Attribution d'un id
+    var ai = new Player(aiSocket, "AI", true); // Creation d'un joueur AI
+    Player.list[ai.id] = ai; // Ajout au liste des joueurs
+    if(this.players[1] !== undefined) { // Si il y a un jouer 1 dans le jeu
+      ai.localId = 2; // Le AI devient joueur 2
     } else {
-      ai.localId = 1;
-    }
-    this.players[ai.localId] = ai;
-    this.assignAttributesToPlayer(ai);
-    this.pushPlayerToInitPack(ai);
-  }
+      ai.localId = 1; // le AI devient joueur 1
+    } // fin if
+    this.players[ai.localId] = ai; // Ajouter le AI au liste des joueurs du jeu
+    this.assignAttributesToPlayer(ai); // Ajouter des attributs au AI
+    this.pushPlayerToInitPack(ai); // Fonction pour signaler les autres joueurs qu'un AI a rejoint la partie
+  } // fin createAI
 
+  // Fonction pour voir si la balle est touché
   this.ballIntercept = function(ball, player, dx, dy, ai) {
-    var intercept;
-    if(dx < 0) {
+    var intercept; // Booléen: true si il y a une interception, false sinon
+    if(dx < 0) { // Si le ball bouge vers la gauche
       var right = player.right + ball.radius
       intercept = this.intercept(ball.x, ball.y,
                                  ball.x + dx, ball.y + dy,
                                  right, player.top - ball.radius,
                                  right, player.bottom + ball.radius,
-                                 'right', ai);
-    } else if(dx > 0) {
+                                 'right', ai); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté droite du joueur
+    } else if(dx > 0) { // Sinon si le ball bouge vers la droite
       var left = player.left - ball.radius;
       intercept = this.intercept(ball.x, ball.y,
                                  ball.x + dx, ball.y + dy,
                                  left, player.top - ball.radius,
                                  left, player.bottom + ball.radius,
-                                 'left', ai);
-    }
-    if(!intercept) {
-      if (dy < 0) {
+                                 'left', ai); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté gauche du joueur
+    } // fin si
+    if(!intercept) { // Si il n'y a pas encore eu d'interception
+      if (dy < 0) { // Si le ball bouge vers le haut
         var bottom = player.bottom + ball.radius;
         intercept = this.intercept(ball.x, ball.y,
                                    ball.x + dx, ball.y + dy,
                                    player.left - ball.radius, bottom,
                                    player.right + ball.radius, bottom,
-                                   'bottom', ai);
-      } else if (dy > 0) {
+                                   'bottom', ai); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté haute du joueur
+      } else if (dy > 0) { // Sinon si le ball bouge vers le bas
         var top = player.top - ball.radius;
         intercept = this.intercept(ball.x, ball.y,
                                    ball.x + dx, ball.y + dy,
                                    player.left - ball.radius, top,
                                    player.right + ball.radius, top,
-                                   'top', ai);
-      }
-    }
+                                   'top', ai); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté bas du joueur
+      } // fin si
+    } // fin si
     return intercept;
-  }
+  } // fin ballIntercept
 
-  this.intercept = function(x1, y1, x2, y2, x3, y3, x4, y4, d, ai) {
+  this.intercept = function(x1, y1, x2, y2, x3, y3, x4, y4, d, ai) { // fonction pour calculer si il y une interception
+    // Fonction pour calculer l'intersection de deux segments de lignes (fait à partir d'un formule mathématique, retrouvable sur wikipedia, ...)
     if(ai)
         console.log("x1: " + x1 + "  y1: " + y1 + "  x2: " + x2 + "  y2: " + y2 + "  x3: " + x3 + "  y3: " + y3 + "  x4: " + x4 + "  y4: " + y4);
     var denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
@@ -199,31 +214,31 @@ var Game = function(player) {
       }
     }
     return null;
-  }
+  } // fin intercept
 
-  this.goal = function(localId, ball) {
-    if(this.playerCount == 2) {
+  this.goal = function(localId, ball) { // si il y a eu un but
+    if(this.playerCount == 2) { // le score est seulement compter si il y a deux joueurs connecté (le score contre un bot n'es pas compté)
       var player = this.players[localId];
-      player.score += 1;
+      player.score += 1; // Incrementation du score du joueur qui à fait le but
       // if(player.score < 10) {
       //   this.sendPackage('scored', player.id);
       //   ball.reset(localId);
       // }
-      this.sendPackage('addToChat', this.players[1].score + ' - ' + this.players[2].score);
+      this.sendPackage('addToChat', this.players[1].score + ' - ' + this.players[2].score); // Envoyer le score au joueurs
     }
-    ball.reset(localId);
+    ball.reset(localId); // Remettre la ball en jeu du coté du joueur qui à fait le but
   }
 
-  this.ai = function(ai, ball) {
+  this.ai = function(ai, ball) { // Fonction pour gerer le AI
     if((ball.x < ai.left && ball.spdX < 0) || (ball.x > ai.right && ball.spdX > 0)) {
       ai.moveUp = false;
       ai.moveDown = false;
       return;
-    }
+    } // Le AI bouge pas si la ball ne bouge pas vers le joueur et on sort de la fonction
 
-    this.predict(ai, ball);
+    this.predict(ai, ball); // Predire l'arrivé du ball
 
-    if(ai.prediction) {
+    if(ai.prediction) { // Si il y a eu une prediction
       if(ai.prediction.y < (ai.top + ai.height/2 - 5)) {
         ai.moveUp = true;
         ai.moveDown = false;
@@ -234,8 +249,8 @@ var Game = function(player) {
         ai.moveUp = false;
         ai.moveDown = false;
       }
-    }
-  }
+    } // fin si
+  } // fin ai
 
   this.predict = function(ai, ball) {
     // if(ai.prediction &&
