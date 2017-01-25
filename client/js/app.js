@@ -5,6 +5,7 @@ var screenHeight = window.innerHeight;
 
 var c = document.getElementById('ctx');
 var ctx = c.getContext('2d');
+ctx.translate(400, 400);
 //c.width = screenWidth; c.height = screenHeight
 
 
@@ -119,10 +120,9 @@ var onSocket = function(socket) {
     }
   });
 
-  socket.on('court', function(data) {
-    COURT.wallWidth = data.wallWidth;
-    COURT.walls = data.walls;
-    COURT.scores = data.scores;
+  socket.on('map', function(data) {
+    MAP.wallWidth = data.ww;
+    MAP.walls = data.walls;
   });
 
   socket.on('scored', function(data) {
@@ -173,23 +173,9 @@ var Player = function(initPack) {
 
 Player.list = {};
 
-var COURT = {
-  walls: {},
-  scores: {}
+var MAP = {
+  walls: {}
 };
-
-var DIGITS = [
-  [1, 1, 1, 0, 1, 1, 1], // 0
-  [0, 0, 1, 0, 0, 1, 0], // 1
-  [1, 0, 1, 1, 1, 0, 1], // 2
-  [1, 0, 1, 1, 0, 1, 1], // 3
-  [0, 1, 1, 1, 0, 1, 0], // 4
-  [1, 1, 0, 1, 0, 1, 1], // 5
-  [1, 1, 0, 1, 1, 1, 1], // 6
-  [1, 0, 1, 0, 0, 1, 0], // 7
-  [1, 1, 1, 1, 1, 1, 1], // 8
-  [1, 1, 1, 1, 0, 1, 0]  // 9
-]
 
 var Ball = function(initPack) {
   this.id = initPack.id;
@@ -210,46 +196,29 @@ Ball.list = {};
 ///////////////////////////
 
 var drawWalls = function() {
-  ctx.fillStyle = 'white';
-  for(var n in COURT.walls) {
-    ctx.fillRect(COURT.walls[n].x, COURT.walls[n].y, COURT.walls[n].width, COURT.walls[n].height);
+  //ctx.fillStyle = 'white';
+  for(var i in MAP.walls) {
+    // ctx.fillRect(MAP.walls[n].x1, MAP.walls[n].y1, MAP.walls[n].width, MAP.walls[n].height);
+    var w = MAP.walls[i];
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(w.x1, w.y1);
+    ctx.lineTo(w.x2, w.y2);
+    ctx.closePath();
+    ctx.stroke();
   }
+  ctx.fillRect(0, 0, 10, 10);
 }
-
-// var drawScores = function() {
-//   ctx.fillStyle = 'white';
-//   var dw = dh = COURT.wallWidth;
-//   for(var i in Player.list) {
-//     var p = Player.list[i];
-//     var blocks = DIGITS[p.score];
-//     var coord = COURT.scores[p.localId-1];
-//     if (blocks[0])
-//       ctx.fillRect(coord.x, coord.y, coord.w, dh);
-//     if (blocks[1])
-//       ctx.fillRect(coord.x, coord.y, dw, coord.h/2);
-//     if (blocks[2])
-//       ctx.fillRect(coord.x+coord.w-dw, coord.y, dw, coord.h/2);
-//     if (blocks[3])
-//       ctx.fillRect(coord.x, coord.y + coord.h/2 - dh/2, coord.w, dh);
-//     if (blocks[4])
-//       ctx.fillRect(coord.x, coord.y + coord.h/2, dw, coord.h/2);
-//     if (blocks[5])
-//       ctx.fillRect(coord.x+coord.w-dw, coord.y + coord.h/2, dw, coord.h/2);
-//     if (blocks[6])
-//       ctx.fillRect(coord.x, coord.y+coord.h-dh, coord.w, dh);
-//   }
-//   var dw = dh = this.ww*4/5;
-// }
 
 var drawPlayers = function() {
   for(var i in Player.list) {
     var p = Player.list[i];
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, p.width, p.height);
-    if(p.predictX && p.predictY) {
-      ctx.fillStyle = 'red';
-      ctx.fillRect(p.predictX, p.predictY, 5, 5);
-    }
+    //ctx.fillRect(p.x, p.y, p.width, p.height);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y - (p.height/2));
+    ctx.lineTo(p.x, p.y + (p.height/2));
+    ctx.closePath();
+    ctx.stroke();
   }
 }
 
@@ -258,11 +227,10 @@ var drawBalls = function() {
     var b = Ball.list[i];
     var w = h = b.radius * 2;
     ctx.fillStyle = b.color;
-    // ctx.beginPath();
-    // ctx.arc(b.x, b.y, b.radius, 0, 2*Math.PI, true);
-    // ctx.fill();
-    // ctx.closePath();
-    ctx.fillRect(b.x - b.radius, b.y - b.radius, w, h);
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.radius, 0, 2*Math.PI, true);
+    ctx.fill();
+    ctx.closePath();
   }
 }
 
@@ -282,35 +250,34 @@ function animloop() {
 }
 
 function gameLoop() {
-  document.onkeydown = function(event) {
-    // if(event.keyCode === 68) { //d
-    //   socket.emit('keyPress', { inputId: 'right', state: true });
-    // } else
-    if(event.keyCode === 83) { //s
-      socket.emit('keyPress', { inputId: 'down', state: true });
-    // } else if(event.keyCode === 81) { //q
-    //   socket.emit('keyPress', { inputId: 'left', state: true });
-    } else if(event.keyCode === 90) { //z
-      socket.emit('keyPress', { inputId: 'up', state: true });
-    }
-  }
-
-  document.onkeyup = function(event) {
-    // if(event.keyCode === 68) { //d
-    //   socket.emit('keyPress', { inputId: 'right', state: false });
-    // } else
-    if(event.keyCode === 83) { //s
-      socket.emit('keyPress', { inputId: 'down', state: false });
-    // } else if(event.keyCode === 81) { //q
-    //   socket.emit('keyPress', { inputId: 'left', state: false });
-    } else if(event.keyCode === 90) { //z
-      socket.emit('keyPress', { inputId: 'up', state: false });
-    }
-  }
-
-  ctx.clearRect(0,0,640,480);
+  ctx.clearRect(-400, -400, 800, 800);
   drawWalls();
-  //drawScores();
   drawPlayers();
   drawBalls();
+}
+
+document.onkeydown = function(event) {
+  // if(event.keyCode === 68) { //d
+  //   socket.emit('keyPress', { inputId: 'right', state: true });
+  // } else
+  if(event.keyCode === 83) { //s
+    socket.emit('keyPress', { inputId: 'down', state: true });
+  // } else if(event.keyCode === 81) { //q
+  //   socket.emit('keyPress', { inputId: 'left', state: true });
+  } else if(event.keyCode === 90) { //z
+    socket.emit('keyPress', { inputId: 'up', state: true });
+  }
+}
+
+document.onkeyup = function(event) {
+  // if(event.keyCode === 68) { //d
+  //   socket.emit('keyPress', { inputId: 'right', state: false });
+  // } else
+  if(event.keyCode === 83) { //s
+    socket.emit('keyPress', { inputId: 'down', state: false });
+  // } else if(event.keyCode === 81) { //q
+  //   socket.emit('keyPress', { inputId: 'left', state: false });
+  } else if(event.keyCode === 90) { //z
+    socket.emit('keyPress', { inputId: 'up', state: false });
+  }
 }

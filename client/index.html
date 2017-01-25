@@ -7,24 +7,23 @@
   <link href="/client/css/style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-  <div class="container">
-    <div id="startMenuWrapper">
-      <div id="startMenu">
-            <p>PONG IO</p>
-            <form id="start-form">
-              <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="playerNameInput" autocomplete="off"/>
-              <b id="input-error">Nick name must be alphanumeric characters only!</b>
-              <br />
-              <button id="startButton" type="submit">Play</button>
-            </form>
-        </div>
+  <div id="startMenuWrapper">
+    <div id="startMenu">
+      <p>PONG IO</p>
+      <form id="start-form">
+        <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="playerNameInput" autocomplete="off"/>
+        <b id="input-error">Nick name must be alphanumeric characters only!</b>
+        <br />
+        <button id="startButton" type="submit">Play</button>
+      </form>
     </div>
-    <div id="gameAreaWrapper" style="display: none;">
-      <div id="gameWrapper">
-        <canvas id="ctx" width="640" height="480"></canvas>
-      </div>
-      <div id="chat">
-        <div id="chat-text"></div>
+  </div>
+  <div id="gameAreaWrapper" style="display: none;">
+    <div id="gameWrapper">
+      <canvas id="ctx" width="800" height="800"></canvas>
+    </div>
+    <div id="chat">
+      <div id="chat-text"></div>
 
         <form id="chat-form">
           <input id="chat-input" type="text" autocomplete="off"/>
