@@ -101,6 +101,7 @@ var GameServer = function() {
     this.roomCount++;  // Incrementer le compteur des jeux
 
     room.createAI();  // Mettre des AI sur tout les places vide du jeu
+    room.createAI();
   } // fin createGame
 
   // Mettre a jour tout les chambres
@@ -127,7 +128,7 @@ var gameServer = new GameServer();
 var Game = function(player) { // Le premier joueur est passer à la création du jeu
   this.id = random(1, 1000000000);        // Le id du jeu
   player.localId = 1;                     // Le id local du joueur, c-a-d le nb du jouer dans le jeu
-  this.maxPlayers = 2;                    // Le nombre max des joueurs dans le jeu
+  this.maxPlayers = 3;                    // Le nombre max des joueurs dans le jeu
   this.players = {};                      // La liste des joueurs dans le jeu
   this.players[player.localId] = player;  // Ajouter le premier à la liste des joueurs
   this.playerCount = 1;                   // Le nombre de joueurs dans le jeu
@@ -159,7 +160,11 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     player.x = (goal.x1 + goal.x2) / 2;
     player.y = (goal.y1 + goal.y2) / 2;
     var angle = Math.abs(Math.atan2(player.y, player.x)) * 180 / Math.PI;
-    player.angle = angle;
+    if(goal.angle2 == 0) {
+      player.angle = (goal.angle1 + 360) / 2;
+    } else {
+      player.angle = (goal.angle1 + goal.angle2) / 2;
+    }
     console.log(angle);
     player.leftX = goal.angle1.x;
     player.leftY = goal.angle1.y;
@@ -170,8 +175,13 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
   this.joinPlayer = function(player) { // Ajouter un joueur au jeu
     if(this.players[1] !== undefined && !this.players[1].isAI) { // si le le jouer 1 existe, ou c'est pas un AI
-      player.localId = 2; // Le joueur devient joueur 2
-      this.removePack.push(this.players[2].id); // Le AI est supprimé
+      if(this.players[2] !== undefined && !this.players[2].isAI) {
+        player.localId = 3; // Le joueur devient joueur 2
+        this.removePack.push(this.players[3].id); // Le AI est supprimé
+      } else {
+        player.localId = 2; // Le joueur devient joueur 2
+        this.removePack.push(this.players[2].id); // Le AI est supprimé
+      }
     } else {
       player.localId = 1; // Le joueur devient joueur 1
     }
@@ -195,7 +205,11 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     var ai = new Player(aiSocket, "AI", true); // Creation d'un joueur AI
     Player.list[ai.id] = ai; // Ajout au liste des joueurs
     if(this.players[1] !== undefined) { // Si il y a un jouer 1 dans le jeu
-      ai.localId = 2; // Le AI devient joueur 2
+      if(this.players[2] !== undefined) {
+        ai.localId = 3;
+      } else {
+        ai.localId = 2; // Le AI devient joueur 2
+      }
     } else {
       ai.localId = 1; // le AI devient joueur 1
     } // fin if
@@ -226,6 +240,10 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       username: player.username,
       x: player.x,
       y: player.y,
+      x1: player.x1,
+      y1: player.y1,
+      x2: player.x2,
+      y2: player.y2,
       width: player.width,
       height: player.height,
       color: player.color,
@@ -276,14 +294,22 @@ var Game = function(player) { // Le premier joueur est passer à la création du
           pack.push({
             id: player.id,
             x: player.x,
-            y: player.y
+            y: player.y,
+            x1: player.x1,
+            y1: player.y1,
+            x2: player.x2,
+            y2: player.y2
           });
       } else { // Sinon mettre a jour le joueur
         player.update();
         pack.push({
           id: player.id,
           x: player.x,
-          y: player.y
+          y: player.y,
+          x1: player.x1,
+          y1: player.y1,
+          x2: player.x2,
+          y2: player.y2
         });
       }
     }
@@ -348,16 +374,22 @@ var Map = function(game) {
 
   this.ww = ww;
 
-  var wall = new Wall(150, 30);
+  var wall = new Wall(0, 60);
   Wall.list[wall.id] = wall;
 
-  wall = new Wall(210, 330);
+  wall = new Wall(120, 180);
   Wall.list[wall.id] = wall;
 
-  var goal = new Goal(210, 150, 1);
+  wall = new Wall(240, 300);
+  Wall.list[wall.id] = wall;
+
+  var goal = new Goal(60, 120, 1);
   Goal.list[goal.localId] = goal;
 
-  goal = new Goal(30, 330, 2);
+  goal = new Goal(180, 240, 2);
+  Goal.list[goal.localId] = goal;
+
+  goal = new Goal(300, 0, 3);
   Goal.list[goal.localId] = goal;
 } // fin classe Map
 
@@ -400,6 +432,9 @@ var Goal = function(angle1, angle2, localId) {
   this.py1 = Math.sin(angle1 * Math.PI / 180) * 340;
   this.px2 = Math.cos(angle2 * Math.PI / 180) * 340;
   this.py2 = Math.sin(angle2 * Math.PI / 180) * 340;
+
+  this.b = ((this.px1 * this.py2) - (this.px2 * this.py1)) / (this.px1 - this.px2);
+  this.a = (this.py1 - this.b) / this.px1;
 }
 
 Goal.list = {}
@@ -414,14 +449,14 @@ Goal.list = {}
 var Ball = function(game) {
   this.id = random(1, 1000000000); // Attribution d'un id au ball
   this.radius = 5; // Le rayon du ball
-  this.x = -300;
+  this.x = -200;
   this.y = -150;
   this.speed = 4;
   this.accel = 4;
   this.spdX = this.speed;
   this.spdY = this.speed;
   // this.color = "rgb(" + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ")";
-  this.color = 'white';
+  this.color = 'black';
   this.game = game;
 
   this.targets = {
@@ -603,9 +638,9 @@ var Player = function(socket, username, isAI) {
   this.y1 = 0;
   this.x2 = 0;
   this.y2 = 0;
-  this.width = 12;
+  this.width = 30;
   this.height = 60;
-  this.speed = 0.75;
+  this.speed = 4;
   // this.color = "rgb(" + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ")";
   this.color = 'white';
   this.score = 0;
@@ -634,10 +669,18 @@ var Player = function(socket, username, isAI) {
   }
 
   this.setSides = function() {
-    this.x1 = this.x;
-    this.y1 = this.y - (this.height/2);
-    this.x2 = this.x;
-    this.y2 = this.y + (this.height/2);
+    // this.x1 = this.x;
+    // this.y1 = this.y - (this.height/2);
+    // this.x2 = this.x;
+    // this.y2 = this.y + (this.height/2);
+    var x = (Math.sqrt(4 * Math.pow(this.width, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
+    var y = this.goal.a * x;
+    this.x1 = this.x + x;
+    this.y1 = this.y + y;
+    x *= -1;
+    y *= -1;
+    this.x2 = this.x + x;
+    this.y2 = this.y + y;
   }
 
   this.getPosition = function() {
@@ -657,15 +700,31 @@ var Player = function(socket, username, isAI) {
       rightAngle -= 360;
     }
     if(this.moveUp && this.angle < leftAngle-5) {
-      this.angle += this.speed;
-      point = this.getPosition();
-      this.x = point.x;
-      this.y = point.y;
+      // this.angle += this.speed;
+      // point = this.getPosition();
+      // this.x = point.x;
+      // this.y = point.y;
+      var x = (Math.sqrt(4 * Math.pow(this.speed, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
+      if(this.angle < 180) {
+        console.log("Ma bite");
+        console.log(this.angle);
+        x *= -1;
+      }
+      var y = this.goal.a * x;
+      this.x += x;
+      this.y += y;
     } else if(this.moveDown && this.angle > rightAngle+5) {
-      this.angle -= this.speed;
-      point = this.getPosition();
-      this.x = point.x;
-      this.y = point.y;
+      // this.angle -= this.speed;
+      // point = this.getPosition();
+      // this.x = point.x;
+      // this.y = point.y;
+      var x = (Math.sqrt(4 * Math.pow(this.speed, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
+      if(this.angle > 180) {
+        x *= -1;
+      }
+      var y = this.goal.a * x;
+      this.x += x;
+      this.y += y;
     }
     this.setSides();
   }

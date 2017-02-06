@@ -1,6 +1,10 @@
 # PONG IO
 
-Langage utilisé: Node js
+## Executer le Pong
+
+
+
+## git
 
 * git: https://github.com/lgeertsen/PongIO
 

@@ -94,6 +94,18 @@ var onSocket = function(socket) {
         if(pack.y !== undefined) {
           p.y = pack.y;
         }
+        if(pack.x1 !== undefined) {
+          p.x1 = pack.x1;
+        }
+        if(pack.y1 !== undefined) {
+          p.y1 = pack.y1;
+        }
+        if(pack.x2 !== undefined) {
+          p.x2 = pack.x2;
+        }
+        if(pack.y2 !== undefined) {
+          p.y2 = pack.y2;
+        }
         if(p.isAI && data.predictX) {
           p.predictX = pack.predictX;
           p.predictY = pack.predictY;
@@ -163,6 +175,10 @@ var Player = function(initPack) {
   this.username = initPack.username;
   this.x = initPack.x;
   this.y = initPack.y;
+  this.x1 = initPack.x1;
+  this.y1 = initPack.y1;
+  this.x2 = initPack.x2;
+  this.y2 = initPack.y2;
   this.width = initPack.width;
   this.height = initPack.height;
   this.color = initPack.color;
@@ -213,10 +229,11 @@ var drawWalls = function() {
 var drawPlayers = function() {
   for(var i in Player.list) {
     var p = Player.list[i];
+    console.log(p.x1);
     //ctx.fillRect(p.x, p.y, p.width, p.height);
     ctx.beginPath();
-    ctx.moveTo(p.x, p.y - (p.height/2));
-    ctx.lineTo(p.x, p.y + (p.height/2));
+    ctx.moveTo(p.x1, p.y1);
+    ctx.lineTo(p.x2, p.y2);
     ctx.closePath();
     ctx.stroke();
   }
