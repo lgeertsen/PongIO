@@ -135,6 +135,7 @@ var onSocket = function(socket) {
   socket.on('map', function(data) {
     MAP.wallWidth = data.ww;
     MAP.walls = data.walls;
+    MAP.goals = data.goals;
   });
 
   socket.on('scored', function(data) {
@@ -190,7 +191,8 @@ var Player = function(initPack) {
 Player.list = {};
 
 var MAP = {
-  walls: {}
+  walls: {},
+  goals: {}
 };
 
 var Ball = function(initPack) {
@@ -212,6 +214,7 @@ Ball.list = {};
 ///////////////////////////
 
 var drawWalls = function() {
+  ctx.strokeStyle = 'black';
   //ctx.fillStyle = 'white';
   for(var i in MAP.walls) {
     // ctx.fillRect(MAP.walls[n].x1, MAP.walls[n].y1, MAP.walls[n].width, MAP.walls[n].height);
@@ -226,10 +229,22 @@ var drawWalls = function() {
   ctx.fillRect(0, 0, 10, 10);
 }
 
+var drawGoals = function() {
+  ctx.strokeStyle = 'red';
+  for(var i in MAP.goals) {
+    var g = MAP.goals[i];
+    ctx.beginPath();
+    ctx.moveTo(g.x1, g.y1);
+    ctx.lineTo(g.x2, g.y2);
+    ctx.closePath;
+    ctx.stroke();
+  }
+}
+
 var drawPlayers = function() {
+  ctx.strokeStyle = "green";
   for(var i in Player.list) {
     var p = Player.list[i];
-    console.log(p.x1);
     //ctx.fillRect(p.x, p.y, p.width, p.height);
     ctx.beginPath();
     ctx.moveTo(p.x1, p.y1);
@@ -269,6 +284,7 @@ function animloop() {
 function gameLoop() {
   ctx.clearRect(-400, -400, 800, 800);
   drawWalls();
+  drawGoals();
   drawPlayers();
   drawBalls();
 }
