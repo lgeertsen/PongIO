@@ -8,6 +8,8 @@ var ctx = c.getContext('2d');
 ctx.translate(400, 400);
 //c.width = screenWidth; c.height = screenHeight
 
+var ID;
+var ROTATED = false;
 
 
 ///////////////////////////
@@ -59,6 +61,7 @@ window.onload = function() {
 var onSocket = function(socket) {
   socket.on('onconnected', function(data) {
     console.log("Your id is: " + data.id);
+    ID = data.id;
   });
 
   socket.on('playerDisconnect', function() {
@@ -174,6 +177,15 @@ var Player = function(initPack) {
   this.id = initPack.id;
   this.localId = initPack.localId;
   this.username = initPack.username;
+  this.rotation = initPack.rotation;
+
+  if(!ROTATED && this.id == ID) {
+    //console.log(ID);
+    ctx.rotate(-this.rotation / 180 * Math.PI + (Math.PI/2));
+    console.log(this.rotation);
+    ROTATED = true;
+  }
+
   this.x = initPack.x;
   this.y = initPack.y;
   this.x1 = initPack.x1;
@@ -282,7 +294,7 @@ function animloop() {
 }
 
 function gameLoop() {
-  ctx.clearRect(-400, -400, 800, 800);
+  ctx.clearRect(-600, -600, 1200, 1200);
   drawWalls();
   drawGoals();
   drawPlayers();
@@ -290,27 +302,39 @@ function gameLoop() {
 }
 
 document.onkeydown = function(event) {
+  if(event.keyCode === 81) {
+    socket.emit('keyPress', { inputId: 'left', state: true});
+  } else if(event.keyCode === 83) {
+    socket.emit('keyPress', { inputId: 'right', state: true});
+  }
+
   // if(event.keyCode === 68) { //d
   //   socket.emit('keyPress', { inputId: 'right', state: true });
   // } else
-  if(event.keyCode === 83) { //s
-    socket.emit('keyPress', { inputId: 'down', state: true });
+  // if(event.keyCode === 83) { //s
+  //   socket.emit('keyPress', { inputId: 'down', state: true });
   // } else if(event.keyCode === 81) { //q
   //   socket.emit('keyPress', { inputId: 'left', state: true });
-  } else if(event.keyCode === 90) { //z
-    socket.emit('keyPress', { inputId: 'up', state: true });
-  }
+  // } else if(event.keyCode === 90) { //z
+  //   socket.emit('keyPress', { inputId: 'up', state: true });
+  // }
 }
 
 document.onkeyup = function(event) {
+  if(event.keyCode === 81) {
+    socket.emit('keyPress', { inputId: 'left', state: false});
+  } else if(event.keyCode === 83) {
+    socket.emit('keyPress', { inputId: 'right', state: false});
+  }
+
   // if(event.keyCode === 68) { //d
   //   socket.emit('keyPress', { inputId: 'right', state: false });
   // } else
-  if(event.keyCode === 83) { //s
-    socket.emit('keyPress', { inputId: 'down', state: false });
+  // if(event.keyCode === 83) { //s
+  //   socket.emit('keyPress', { inputId: 'down', state: false });
   // } else if(event.keyCode === 81) { //q
   //   socket.emit('keyPress', { inputId: 'left', state: false });
-  } else if(event.keyCode === 90) { //z
-    socket.emit('keyPress', { inputId: 'up', state: false });
-  }
+  // } else if(event.keyCode === 90) { //z
+  //   socket.emit('keyPress', { inputId: 'up', state: false });
+  // }
 }
