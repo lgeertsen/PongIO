@@ -31,14 +31,29 @@ intercept = function(x1, y1, x2, y2, x3, y3, x4, y4, d, debug) { // fonction pou
     if((ua >= 0) && (ua <= 1)) {
       var ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
       if((ub >= 0) && (ub <= 1)) {
+
+        console.log("(" + x3 + ", " + y3 +") (" + x4 + ", " + y4 +")");
         var x = x1 + (ua * (x2-x1));
         var y = y1 + (ua * (y2-y1));
-        return { x: x, y: y, d: d};
+
+        var o = Math.abs(((y4-y3) * x1) - ((x4 - x3) * y1) + (x4*y3) - (y4*x3)) / Math.sqrt(Math.pow((y4-y3), 2) + Math.pow((x4-x3), 2));
+
+        var h = Math.sqrt(Math.pow((y-y1), 2) + Math.pow((x-x1), 2));
+
+        var angle = Math.asin(o/h) * 180 / Math.PI;
+
+        console.log(angle);
+
+        return { x: x, y: y, d: d, angle: angle};
       }
     }
   }
   return null;
 } // fin intercept
+
+
+bounce = function(ball, line, point) {
+}
 
 
 
@@ -101,6 +116,7 @@ var GameServer = function() {
     this.roomCount++;  // Incrementer le compteur des jeux
 
     room.createAI();  // Mettre des AI sur tout les places vide du jeu
+    room.createAI();
   } // fin createGame
 
   // Mettre a jour tout les chambres
@@ -127,7 +143,7 @@ var gameServer = new GameServer();
 var Game = function(player) { // Le premier joueur est passer à la création du jeu
   this.id = random(1, 1000000000);        // Le id du jeu
   player.localId = 1;                     // Le id local du joueur, c-a-d le nb du jouer dans le jeu
-  this.maxPlayers = 2;                    // Le nombre max des joueurs dans le jeu
+  this.maxPlayers = 3;                    // Le nombre max des joueurs dans le jeu
   this.players = {};                      // La liste des joueurs dans le jeu
   this.players[player.localId] = player;  // Ajouter le premier à la liste des joueurs
   this.playerCount = 1;                   // Le nombre de joueurs dans le jeu
@@ -149,56 +165,21 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     balls: []
   };
   this.removePack = []; // Le pack pour le remove
-  this.ai = function(player,ball){
-    var newPosition=ball.accelerate();
-    if(player.isAI){
-      // for(var i in ball.targets.walls){
-      //   var w = ball.targets.walls[i];
-      //   var intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
-      //   while(intercept){
-      //     player.moveUp = false;
-      //     player.moveDown = false;
-      //     newPosition=ball.accelerate();
-      //     intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
-      //   }
-      // }
-      var interception = ball.ballIntercept(player,newPosition.dx,newPosition.dy,false);
-      while(!interception){
-        newPosition=ball.accelerate();
-        interception=ball.ballIntercept(player,newPosition.dx,newPosition.dy,false);
-      }
-      if (interception){
-        switch(interception.d) {
-          case 'left':
-          player.moveUp(interception.x,interception.y);
-          break;
-          case 'right':
-          player.moveDown(interception.x,interception.y);
-          break;
-          case 'top':
-          player.moveUp(interception.x,interception.y);
-          break;
-          case 'bottom':
-          player.moveDown(interception.x,interception.y);
-          break;
-        }
-      }else{
-        player.moveUp = false;
-        player.moveDown = false;
-      }
-    }
-  }
+
   this.assignAttributesToPlayer = function(player) { // Donner des attributs à un jouer qui à rejoint le jeu
     player.roomId = this.id;  // Attribution de l'id du jeu au variable roomId du joueur
     player.minY = this.wallWidth; // Limite min de déplacement pour le joueur
     player.maxY = this.height - this.wallWidth - player.height; // Limite max de déplacement pour le joueur
     //player.setPlayerPosition(player.localId, this.width); // Placer le joueur
     var goal = Goal.list[player.localId];
-    player.x = (goal.x1 + goal.x2) / 2;
-    player.y = (goal.y1 + goal.y2) / 2;
+    player.x = (goal.px1 + goal.px2) / 2;
+    player.y = (goal.py1 + goal.py2) / 2;
     var angle = Math.abs(Math.atan2(player.y, player.x)) * 180 / Math.PI;
-    player.angle = angle;
-    console.log(angle);
+    if(goal.angle2 == 0) {
+      player.angle = (goal.angle1 + 360) / 2;
+    } else {
+      player.angle = (goal.angle1 + goal.angle2) / 2;
+    }
     player.leftX = goal.angle1.x;
     player.leftY = goal.angle1.y;
     player.rightX = goal.angle2.x;
@@ -208,8 +189,13 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
   this.joinPlayer = function(player) { // Ajouter un joueur au jeu
     if(this.players[1] !== undefined && !this.players[1].isAI) { // si le le jouer 1 existe, ou c'est pas un AI
-      player.localId = 2; // Le joueur devient joueur 2
-      this.removePack.push(this.players[2].id); // Le AI est supprimé
+      if(this.players[2] !== undefined && !this.players[2].isAI) {
+        player.localId = 3; // Le joueur devient joueur 2
+        this.removePack.push(this.players[3].id); // Le AI est supprimé
+      } else {
+        player.localId = 2; // Le joueur devient joueur 2
+        this.removePack.push(this.players[2].id); // Le AI est supprimé
+      }
     } else {
       player.localId = 1; // Le joueur devient joueur 1
     }
@@ -217,7 +203,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     this.playerCount++; // Incrementation du compteur de joueurs
     this.assignAttributesToPlayer(player); // Ajouter des attributs au joueur
     player.joinedGame = true; // Le joueur à rejoint un jeu
-    this.sendMap({ ww: this.map.wallWidth, walls: Wall.list }); // Envoyer le map au joueur
+    this.sendMap({ ww: this.map.wallWidth, walls: Wall.list, goals: Goal.list }); // Envoyer le map au joueur
     for(var i in this.players) {
       this.pushPlayerToInitPack(this.players[i]); // Mettre le joueur dans le pack d'initialization
     }
@@ -233,7 +219,11 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     var ai = new Player(aiSocket, "AI", true); // Creation d'un joueur AI
     Player.list[ai.id] = ai; // Ajout au liste des joueurs
     if(this.players[1] !== undefined) { // Si il y a un jouer 1 dans le jeu
-      ai.localId = 2; // Le AI devient joueur 2
+      if(this.players[2] !== undefined) {
+        ai.localId = 3;
+      } else {
+        ai.localId = 2; // Le AI devient joueur 2
+      }
     } else {
       ai.localId = 1; // le AI devient joueur 1
     } // fin if
@@ -252,7 +242,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
   // Fonction pour envoyer la map
   this.sendMap = function(map) {
-    this.sendPackage('map', { wallWidth: map.wallWidth, walls: map.walls });
+    this.sendPackage('map', { wallWidth: map.wallWidth, walls: map.walls, goals: map.goals });
   }
 
   // Fonction pour mettre en joueur dan le pack d'initialization
@@ -264,6 +254,10 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       username: player.username,
       x: player.x,
       y: player.y,
+      x1: player.x1,
+      y1: player.y1,
+      x2: player.x2,
+      y2: player.y2,
       width: player.width,
       height: player.height,
       color: player.color,
@@ -303,6 +297,23 @@ var Game = function(player) { // Le premier joueur est passer à la création du
   // Fonction pour le mise a jour des joueurs
   this.updatePlayers = function() {
     var pack = [];
+    for(var i in this.balls){
+      var b = this.balls[i];
+      for(var i in this.players){
+        var p = this.players[i];
+        for(var i in b.targets.walls){
+          var w = b.targets.walls[i];
+          var inter = intercept(p.x1,p.y1,p.x2,p.y2,w.x1,w.y1,w.x2,w.y2,'deleguee',false);
+          if(inter){
+            if(inter.x==p.x1 && inter.y==p.y1
+            || inter.x==p.x2 && inter.y==p.y2){
+              p.moveDown = false;
+              p.moveUp = false;
+            }
+          }
+        }
+      }
+    }
     for(var i in this.players) { // Pour chaque joueur
       var player = this.players[i];
       if(player.isAI) { // Si le joueur est un AI
@@ -314,18 +325,121 @@ var Game = function(player) { // Le premier joueur est passer à la création du
           pack.push({
             id: player.id,
             x: player.x,
-            y: player.y
+            y: player.y,
+            x1: player.x1,
+            y1: player.y1,
+            x2: player.x2,
+            y2: player.y2
           });
       } else { // Sinon mettre a jour le joueur
         player.update();
         pack.push({
           id: player.id,
           x: player.x,
-          y: player.y
+          y: player.y,
+          x1: player.x1,
+          y1: player.y1,
+          x2: player.x2,
+          y2: player.y2
         });
       }
     }
     return pack;
+  }
+
+  this.ai = function(player,ball) {
+      // for(var i in ball.targets.walls){
+      //   var w = ball.targets.walls[i];
+      //   var intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
+      //   while(intercept){
+      //     player.moveUp = false;
+      //     player.moveDown = false;
+      //     newPosition=ball.accelerate();
+      //     intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
+      //   }
+      // }
+      var b;
+      b = new Ball(this);
+      b.color = 'white';
+      b.x = ball.x;
+      b.y = ball.y;
+      b.dx = ball.dx;
+      b.dy = ball.dy;
+      b.speed = ball.speed;
+      b.spdY = ball.spdY;
+      b.spdX = ball.spdX;
+      b.radius = ball.radius;
+      b.accel = ball.accel;
+      var newPosition = b.accelerate();
+      var intercept = b.ballIntercept(player,newPosition.dx,newPosition.dy,false);
+      if(intercept){
+        ball.speed = -b.speed;
+      }
+      var interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
+      if(!interception){
+        if(intercept){
+          player.moveDown = false;
+          player.moveUp = false;
+          return;
+        }
+        b.x = newPosition.x;
+        b.y = newPosition.y;
+        b.dx = newPosition.dx;
+        b.dy = newPosition.dy;
+        b.speed = newPosition.speed;
+        b.spdY = newPosition.spdY;
+        b.spdX = newPosition.spdX;
+        newPosition = b.accelerate();
+        interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
+      }else{
+        console.log('hamzaaaaaaaaa');
+        if(intercept){
+          player.moveDown = false;
+          player.moveUp = false;
+          return;
+        }
+        if(ball.spdX<0 && ball.spdY<0){
+          if(interception.x<player.x){
+            player.moveDown = true;
+          }else{
+            player.moveUp = true;
+          }
+        }else if(ball.spdX<0 && ball.spdY>0){
+          if(player.x<interception.x){
+            player.moveUp = true;
+          }else{
+            player.moveDown = true;
+          }
+        }else if(ball.spdX>0 && ball.spdY<0){
+          if(player.x<interception.x){
+            player.moveUp = true;
+          }else{
+            player.moveDown = true;
+          }
+        }else if(ball.spdX>0 && ball.spdY>0){
+          if(player.x>interception.x){
+            player.moveUp = true;
+          }else{
+            player.moveDown = true;
+          }
+        }else if(player.x==interception.x){
+          player.moveDown = false;
+          player.moveUp = false;
+        }
+        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'left'){
+        //   player.moveUp = true;
+        // }
+        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'right') {
+        //   player.moveDown = true;
+        // }
+        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'top') {
+        //   player.moveUp = true;
+        // }
+        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'down') {
+        //   player.moveDown = true;
+        // }
+        console.log('lllllllllllllllllllllll');
+      }
   }
 
   // Fonction pour la mise à jour des balls
@@ -363,7 +477,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
   }
 
   this.assignAttributesToPlayer(player); // Donner des attributs au joueur
-  this.sendMap({ ww: this.map.wallWidth, walls: Wall.list }); // Envoyer la map au joueurs
+  this.sendMap({ ww: this.map.wallWidth, walls: Wall.list, goals: Goal.list }); // Envoyer la map au joueurs
   this.pushPlayerToInitPack(player); // Mettre le joueur dans le pack d'initialization
   for(var i in this.balls) { // Pour tout les balls
     this.pushBallToInitPack(this.balls[i]); // Mettre le ball dans le pack d'initialization
@@ -386,16 +500,35 @@ var Map = function(game) {
 
   this.ww = ww;
 
-  var wall = new Wall(150, 30);
+  var wall = new Wall(0, 60);
   Wall.list[wall.id] = wall;
 
-  wall = new Wall(210, 330);
+  wall = new Wall(120, 180);
   Wall.list[wall.id] = wall;
 
-  var goal = new Goal(210, 150, 1);
+  wall = new Wall(240, 300);
+  Wall.list[wall.id] = wall;
+
+
+
+  var wall = new Wall(60, 120);
+  Wall.list[wall.id] = wall;
+
+  wall = new Wall(180, 240);
+  Wall.list[wall.id] = wall;
+
+  wall = new Wall(300, 0);
+  Wall.list[wall.id] = wall;
+
+
+
+  var goal = new Goal(60, 120, 1);
   Goal.list[goal.localId] = goal;
 
-  goal = new Goal(30, 330, 2);
+  goal = new Goal(180, 240, 2);
+  Goal.list[goal.localId] = goal;
+
+  goal = new Goal(300, 0, 3);
   Goal.list[goal.localId] = goal;
 } // fin classe Map
 
@@ -413,6 +546,11 @@ var Wall = function(angle1, angle2) {
   this.y1 = Math.sin(angle1 * Math.PI / 180) * 350;
   this.x2 = Math.cos(angle2 * Math.PI / 180) * 350;
   this.y2 = Math.sin(angle2 * Math.PI / 180) * 350;
+
+  this.b = ((this.x1 * this.y2) - (this.x2 * this.y1)) / (this.x1 - this.x2);
+  this.a = (this.y1 - this.b) / this.x1;
+
+
 
   return this;
 }
@@ -438,6 +576,9 @@ var Goal = function(angle1, angle2, localId) {
   this.py1 = Math.sin(angle1 * Math.PI / 180) * 340;
   this.px2 = Math.cos(angle2 * Math.PI / 180) * 340;
   this.py2 = Math.sin(angle2 * Math.PI / 180) * 340;
+
+  this.b = ((this.px1 * this.py2) - (this.px2 * this.py1)) / (this.px1 - this.px2);
+  this.a = (this.py1 - this.b) / this.px1;
 }
 
 Goal.list = {}
@@ -452,14 +593,14 @@ Goal.list = {}
 var Ball = function(game) {
   this.id = random(1, 1000000000); // Attribution d'un id au ball
   this.radius = 5; // Le rayon du ball
-  this.x = -300;
-  this.y = -150;
-  this.speed = 4;
-  this.accel = 4;
+  this.x = 150;
+  this.y = 150;
+  this.speed = -4;
+  this.accel = 1;
   this.spdX = this.speed;
   this.spdY = this.speed;
   // this.color = "rgb(" + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ")";
-  this.color = 'white';
+  this.color = 'black';
   this.game = game;
 
   this.targets = {
@@ -479,61 +620,92 @@ var Ball = function(game) {
 
   this.update = function() {
     var newPos = this.accelerate();
-    var item, intercept, goal;
+    var item, foundIntercept, goal;
     for(var i in this.targets.players) {
-      if(!intercept) {
+      if(!foundIntercept) {
         p = this.targets.players[i];
         if(p.localId == 1) {
-          intercept = this.ballIntercept(p, newPos.dx, newPos.dy, false);
+          foundIntercept = this.ballIntercept(p, newPos.dx, newPos.dy, false);
         } else {
-          intercept = this.ballIntercept(p, newPos.dx, newPos.dy, false);
+          foundIntercept = this.ballIntercept(p, newPos.dx, newPos.dy, false);
         }
       }
     }
-    if(!intercept) {
+    if(!foundIntercept) {
       for(var i in this.targets.walls) {
-        if(!intercept) {
+        if(!foundIntercept) {
           w = this.targets.walls[i];
-          intercept = this.ballIntercept(w, newPos.dx, newPos.dy, false);
+          //foundIntercept = this.ballIntercept(w, newPos.dx, newPos.dy, true);
+          foundIntercept = intercept(this.x, this.y, newPos.x, newPos.y, w.x1, w.y1, w.x2, w.y2, 'lol', false);
+        } else {
+          //var point = foundIntercept;
+          //bounce(this, w, point);
         }
       }
+      if(foundIntercept) {
+        console.log(foundIntercept);
+      }
     }
-    if(!intercept) {
+    if(!foundIntercept) {
       for(var i in this.targets.goals) {
         if(!goal) {
           g = this.targets.goals[i];
-          if(this.game.players[1].goal == g) {
-            goal = this.ballIntercept(g, newPos.dx, newPos.dy, true);
-          } else {
-            goal = this.ballIntercept(g, newPos.dx, newPos.dy, false);
-          }
+          goal = intercept(this.x, this.y, newPos.x, newPos.y, g.x1, g.y1, g.x2, g.y2, 'lol', true);
+          // if(this.game.players[1].goal == g) {
+          //   goal = this.ballIntercept(g, newPos.dx, newPos.dy, false);
+          // } else {
+          //   goal = this.ballIntercept(g, newPos.dx, newPos.dy, false);
+          // }
         }
       }
     }
+    this.speed = newPos.speed;
     this.spdX = newPos.spdX;
     this.spdY = newPos.spdY;
     this.x += this.spdX;
     this.y += this.spdY;
 
     if(goal) {
-      console.log(goal);
-      this.game.goal(1, this);
-      this.reset(1);
+      //console.log(goal);
+      //this.game.goal(1, this);
+      //this.reset(1);
+
+      // this.x = goal.x;
+      // this.y = goal.y;
+      this.spdX *= -1;
+      this.spdY *= -1;
+      var pos = this.accelerate();
+      this.spdX = pos.spdX;
+      this.spdY = pos.spdY;
+      this.x += this.spdX;
+      this.y += this.spdY;
     }
 
-    if(intercept) { // Si le ball est touché par un joueur
-      switch(intercept.d) {
-        case 'left':
-        case 'right':
-          this.x = intercept.x;
-          this.spdX = -this.spdX;
-          break;
-        case 'top':
-        case 'bottom':
-          this.y = intercept.y;
-          this.spdY = -this.spdY
-          break;
-      }
+    if(foundIntercept) { // Si le ball est touché par un joueur
+      //this.x = foundIntercept.x;
+      //this.y = foundIntercept.y;
+      // this.spdX *= -1;
+      // this.spdY *= -1;
+      this.spdX = Math.cos((180 + foundIntercept.angle) / 180 * Math.PI) * this.speed;
+      this.spdY = Math.sin((180 + foundIntercept.angle) / 180 * Math.PI) * this.speed;
+      console.log(this.spdX);
+      // var pos = this.accelerate();
+      // this.spdX = pos.spdX;
+      // this.spdY = pos.spdY;
+      this.x += this.spdX;
+      this.y += this.spdY;
+      // switch(foundIntercept.d) {
+      //   case 'left':
+      //   case 'right':
+      //     this.x = foundIntercept.x;
+      //     this.spdX = -this.spdX;
+      //     break;
+      //   case 'top':
+      //   case 'bottom':
+      //     this.y = foundIntercept.y;
+      //     this.spdY = -this.spdY
+      //     break;
+      // }
     }
 
     this.setSides();
@@ -577,7 +749,7 @@ var Ball = function(game) {
   } // fin ballIntercept
 
   this.reset = function(id) {
-    this.x = -300;
+    this.x = -150;
     this.y = -150;
     this.speed = 4;
     this.spdX = this.speed;
@@ -594,11 +766,12 @@ var Ball = function(game) {
 
   this.accelerate = function() {
     var accel = 1 + (this.accel * 1/60 * 1/60 * 0.5);
+    var speed = this.speed * accel;
     var spdX2 = this.spdX * accel;
     var spdY2 = this.spdY * accel;
     var x2  = this.x + spdX2;
     var y2  = this.y + spdY2;
-    return { dx: (x2-this.x), dy: (y2-this.y), x: x2, y: y2, spdX: spdX2, spdY: spdY2 };
+    return { dx: (x2-this.x), dy: (y2-this.y), x: x2, y: y2, speed: speed, spdX: spdX2, spdY: spdY2 };
     //return {x: x, y: y, dx: dx, dy: dy}
   }
 
@@ -641,9 +814,9 @@ var Player = function(socket, username, isAI) {
   this.y1 = 0;
   this.x2 = 0;
   this.y2 = 0;
-  this.width = 12;
+  this.width = 30;
   this.height = 60;
-  this.speed = 0.75;
+  this.speed = 4;
   // this.color = "rgb(" + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ")";
   this.color = 'white';
   this.score = 0;
@@ -658,22 +831,7 @@ var Player = function(socket, username, isAI) {
   if(this.isAI) {
     this.level = LEVELS[0];
   }
-  this.moveUp = function(x1,y1){
-    if(this.isAI){
-      while(this.x!=x1 && this.y!=y1){
-        this.moveUp = true;
-      }
-      this.moveUp = false;
-    }
-  }
-  this.moveDown = function(x2,y2){
-    if(this.isAI){
-      if(this.x!=x2 && this.y!=y2){
-        this.moveDown = true;
-      }
-      this.moveDown = false;
-    }
-  }
+
   this.joinedGame = false;
 
   this.setPlayerPosition = function(position, width) {
@@ -687,10 +845,36 @@ var Player = function(socket, username, isAI) {
   }
 
   this.setSides = function() {
-    this.x1 = this.x;
-    this.y1 = this.y - (this.height/2);
-    this.x2 = this.x;
-    this.y2 = this.y + (this.height/2);
+    // this.x1 = this.x;
+    // this.y1 = this.y - (this.height/2);
+    // this.x2 = this.x;
+    // this.y2 = this.y + (this.height/2);
+    var x = (Math.sqrt(4 * Math.pow(this.width, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
+    var y = this.goal.a * x;
+    this.x1 = this.x + x;
+    this.y1 = this.y + y;
+    x *= -1;
+    y *= -1;
+    this.x2 = this.x + x;
+    this.y2 = this.y + y;
+  }
+
+  this.moveHaut = function(x,y){
+    if (this.y<y){
+      this.moveUp = true;
+    }else{
+      this.moveUp = false;
+    }
+    this.moveUp = false;
+  }
+
+  this.moveBas = function(x,y){
+    if (this.y>y){
+      this.moveDown = true;
+    }else{
+      this.moveDown = false;
+    }
+    this.moveDown = false;
   }
 
   this.getPosition = function() {
@@ -710,15 +894,29 @@ var Player = function(socket, username, isAI) {
       rightAngle -= 360;
     }
     if(this.moveUp && this.angle < leftAngle-5) {
-      this.angle += this.speed;
-      point = this.getPosition();
-      this.x = point.x;
-      this.y = point.y;
+      // this.angle += this.speed;
+      // point = this.getPosition();
+      // this.x = point.x;
+      // this.y = point.y;
+      var x = (Math.sqrt(4 * Math.pow(this.speed, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
+      if(this.angle < 180) {
+        x *= -1;
+      }
+      var y = this.goal.a * x;
+      this.x += x;
+      this.y += y;
     } else if(this.moveDown && this.angle > rightAngle+5) {
-      this.angle -= this.speed;
-      point = this.getPosition();
-      this.x = point.x;
-      this.y = point.y;
+      // this.angle -= this.speed;
+      // point = this.getPosition();
+      // this.x = point.x;
+      // this.y = point.y;
+      var x = (Math.sqrt(4 * Math.pow(this.speed, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
+      if(this.angle > 180) {
+        x *= -1;
+      }
+      var y = this.goal.a * x;
+      this.x += x;
+      this.y += y;
     }
     this.setSides();
   }
@@ -771,9 +969,6 @@ Player.onDisconnect = function(socket) {
   }
 }
 
-///////////////////////////
-//         IA            //
-///////////////////////////
 
 
 ///////////////////////////
