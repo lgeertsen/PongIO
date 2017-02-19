@@ -315,6 +315,103 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     this.sendPackage('update', pack); // Envoyer le pack au joueurs
   }
 
+
+  //Fonction pour la gestion de l'ia
+  this.ai = function(player,ball) {
+      // for(var i in ball.targets.walls){
+      //   var w = ball.targets.walls[i];
+      //   var intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
+      //   while(intercept){
+      //     player.moveUp = false;
+      //     player.moveDown = false;
+      //     newPosition=ball.accelerate();
+      //     intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
+      //   }
+      // }
+      var b;
+      b = new Ball(this);
+      b.color = 'white';
+      b.x = ball.x;
+      b.y = ball.y;
+      b.dx = ball.dx;
+      b.dy = ball.dy;
+      b.speed = ball.speed;
+      b.spdY = ball.spdY;
+      b.spdX = ball.spdX;
+      b.radius = ball.radius;
+      b.accel = ball.accel;
+      var newPosition = b.accelerate();
+      var intercept = b.ballIntercept(player,newPosition.dx,newPosition.dy,false);
+      if(intercept){
+        ball.speed = -b.speed;
+      }
+      var interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
+      if(!interception){
+        if(intercept){
+          player.moveDown = false;
+          player.moveUp = false;
+          return;
+        }
+        b.x = newPosition.x;
+        b.y = newPosition.y;
+        b.dx = newPosition.dx;
+        b.dy = newPosition.dy;
+        b.speed = newPosition.speed;
+        b.spdY = newPosition.spdY;
+        b.spdX = newPosition.spdX;
+        newPosition = b.accelerate();
+        interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
+      }else{
+        console.log('hamzaaaaaaaaa');
+        if(intercept){
+          player.moveDown = false;
+          player.moveUp = false;
+          return;
+        }
+        if(ball.spdX<0 && ball.spdY<0){
+          if(interception.x<player.x){
+            player.moveDown = true;
+          }else{
+            player.moveUp = true;
+          }
+        }else if(ball.spdX<0 && ball.spdY>0){
+          if(player.x<interception.x){
+            player.moveUp = true;
+          }else{
+            player.moveDown = true;
+          }
+        }else if(ball.spdX>0 && ball.spdY<0){
+          if(player.x<interception.x){
+            player.moveUp = true;
+          }else{
+            player.moveDown = true;
+          }
+        }else if(ball.spdX>0 && ball.spdY>0){
+          if(player.x>interception.x){
+            player.moveUp = true;
+          }else{
+            player.moveDown = true;
+          }
+        }else if(player.x==interception.x){
+          player.moveDown = false;
+          player.moveUp = false;
+        }
+        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'left'){
+        //   player.moveUp = true;
+        // }
+        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'right') {
+        //   player.moveDown = true;
+        // }
+        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'top') {
+        //   player.moveUp = true;
+        // }
+        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'down') {
+        //   player.moveDown = true;
+        // }
+        console.log('lllllllllllllllllllllll');
+      }
+  }
+
   // Fonction pour le mise a jour des joueurs
   this.updatePlayers = function() {
     var pack = [];
@@ -409,103 +506,9 @@ var Game = function(player) { // Le premier joueur est passer à la création du
   for(var i in this.balls) { // Pour tout les balls
     this.pushBallToInitPack(this.balls[i]); // Mettre le ball dans le pack d'initialization
   }
-}
-
-//Fonction pour la gestion de l'ia
-this.ai = function(player,ball) {
-    // for(var i in ball.targets.walls){
-    //   var w = ball.targets.walls[i];
-    //   var intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
-    //   while(intercept){
-    //     player.moveUp = false;
-    //     player.moveDown = false;
-    //     newPosition=ball.accelerate();
-    //     intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
-    //   }
-    // }
-    var b;
-    b = new Ball(this);
-    b.color = 'white';
-    b.x = ball.x;
-    b.y = ball.y;
-    b.dx = ball.dx;
-    b.dy = ball.dy;
-    b.speed = ball.speed;
-    b.spdY = ball.spdY;
-    b.spdX = ball.spdX;
-    b.radius = ball.radius;
-    b.accel = ball.accel;
-    var newPosition = b.accelerate();
-    var intercept = b.ballIntercept(player,newPosition.dx,newPosition.dy,false);
-    if(intercept){
-      ball.speed = -b.speed;
-    }
-    var interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
-    if(!interception){
-      if(intercept){
-        player.moveDown = false;
-        player.moveUp = false;
-        return;
-      }
-      b.x = newPosition.x;
-      b.y = newPosition.y;
-      b.dx = newPosition.dx;
-      b.dy = newPosition.dy;
-      b.speed = newPosition.speed;
-      b.spdY = newPosition.spdY;
-      b.spdX = newPosition.spdX;
-      newPosition = b.accelerate();
-      interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
-    }else{
-      console.log('hamzaaaaaaaaa');
-      if(intercept){
-        player.moveDown = false;
-        player.moveUp = false;
-        return;
-      }
-      if(ball.spdX<0 && ball.spdY<0){
-        if(interception.x<player.x){
-          player.moveDown = true;
-        }else{
-          player.moveUp = true;
-        }
-      }else if(ball.spdX<0 && ball.spdY>0){
-        if(player.x<interception.x){
-          player.moveUp = true;
-        }else{
-          player.moveDown = true;
-        }
-      }else if(ball.spdX>0 && ball.spdY<0){
-        if(player.x<interception.x){
-          player.moveUp = true;
-        }else{
-          player.moveDown = true;
-        }
-      }else if(ball.spdX>0 && ball.spdY>0){
-        if(player.x>interception.x){
-          player.moveUp = true;
-        }else{
-          player.moveDown = true;
-        }
-      }else if(player.x==interception.x){
-        player.moveDown = false;
-        player.moveUp = false;
-      }
-      // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'left'){
-      //   player.moveUp = true;
-      // }
-      // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'right') {
-      //   player.moveDown = true;
-      // }
-      // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'top') {
-      //   player.moveUp = true;
-      // }
-      // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'down') {
-      //   player.moveDown = true;
-      // }
-      console.log('lllllllllllllllllllllll');
-    }
 }//Fin de la classe game
+
+
 
 ///////////////////////////
 //          MAP          //
@@ -706,6 +709,45 @@ var Ball = function(game) {
     this.setSides();
   }
 
+
+  //fonction qui detecte si il y a une intersection entre la ball et un element
+  this.ballIntercept = function(item, dx, dy, debug) {
+    var inter;
+    if(dx < 0) { // Si le ball bouge vers la gauche
+      var right = item.x2 + this.radius
+      inter = intercept(this.x, this.y,
+                                 this.x + dx, this.y + dy,
+                                 right, item.y1 - this.radius,
+                                 right, item.y2 + this.radius,
+                                 'right', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté droite du joueur
+    } else if(dx > 0) { // Sinon si le ball bouge vers la droite
+      var left = item.x1 - this.radius;
+      inter = intercept(this.x, this.y,
+                                 this.x + dx, this.y + dy,
+                                 left, item.y1 - this.radius,
+                                 left, item.y2 + this.radius,
+                                 'left', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté gauche du joueur
+    } // fin si
+    if(!inter) { // Si il n'y a pas encore eu d'interception
+      if (dy < 0) { // Si le ball bouge vers le haut
+        var bottom = item.y2 + this.radius;
+        inter = intercept(this.x, this.y,
+                                   this.x + dx, this.y + dy,
+                                   item.x1 - this.radius, bottom,
+                                   item.x2 + this.radius, bottom,
+                                   'bottom', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté haute du joueur
+      } else if (dy > 0) { // Sinon si le ball bouge vers le bas
+        var top = item.y2 - this.radius;
+        inter = intercept(this.x, this.y,
+                                   this.x + dx, this.y + dy,
+                                   item.x1 - this.radius, top,
+                                   item.x2 + this.radius, top,
+                                   'top', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté bas du joueur
+      } // fin si
+    } // fin si
+    return inter;
+  }
+
   this.reset = function(id) {
     this.x = 0;
     this.y = 0;
@@ -734,45 +776,9 @@ var Ball = function(game) {
   }
 
   this.setSides();
-}
+}// fin de la classe ball
 
-//fonction qui detecte si il y a une intersection entre la ball et un element
-this.ballIntercept = function(item, dx, dy, debug) {
-  var inter;
-  if(dx < 0) { // Si le ball bouge vers la gauche
-    var right = item.x2 + this.radius
-    inter = intercept(this.x, this.y,
-                               this.x + dx, this.y + dy,
-                               right, item.y1 - this.radius,
-                               right, item.y2 + this.radius,
-                               'right', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté droite du joueur
-  } else if(dx > 0) { // Sinon si le ball bouge vers la droite
-    var left = item.x1 - this.radius;
-    inter = intercept(this.x, this.y,
-                               this.x + dx, this.y + dy,
-                               left, item.y1 - this.radius,
-                               left, item.y2 + this.radius,
-                               'left', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté gauche du joueur
-  } // fin si
-  if(!inter) { // Si il n'y a pas encore eu d'interception
-    if (dy < 0) { // Si le ball bouge vers le haut
-      var bottom = item.y2 + this.radius;
-      inter = intercept(this.x, this.y,
-                                 this.x + dx, this.y + dy,
-                                 item.x1 - this.radius, bottom,
-                                 item.x2 + this.radius, bottom,
-                                 'bottom', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté haute du joueur
-    } else if (dy > 0) { // Sinon si le ball bouge vers le bas
-      var top = item.y2 - this.radius;
-      inter = intercept(this.x, this.y,
-                                 this.x + dx, this.y + dy,
-                                 item.x1 - this.radius, top,
-                                 item.x2 + this.radius, top,
-                                 'top', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté bas du joueur
-    } // fin si
-  } // fin si
-  return inter;
-} // fin de la classe ball
+
 
 ///////////////////////////
 //        PLAYER         //
