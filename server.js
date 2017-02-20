@@ -49,12 +49,11 @@ intercept = function(x1, y1, x2, y2, x3, y3, x4, y4, debug) { // fonction pour c
         var d1 = Math.sqrt(Math.pow(x3-x1, 2) + Math.pow(y3-y1, 2));
         var d2 = Math.sqrt(Math.pow(x3-x, 2) + Math.pow(y3-y, 2));
 
-        if(d1 < d2) {
-        } else {
+        if(d1 > d2) {
           angle = 180 - angle;
         }
 
-        console.log("intercept angle: " + angle);
+        //console.log("intercept angle: " + angle);
 
         return { x: x, y: y, angle: angle};
       }
@@ -190,7 +189,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     player.minY = this.wallWidth; // Limite min de déplacement pour le joueur
     player.maxY = this.height - this.wallWidth - player.height; // Limite max de déplacement pour le joueur
     //player.setPlayerPosition(player.localId, this.width); // Placer le joueur
-    var goal = Goal.list[player.localId];
+    var goal = this.map.goals[player.localId];
     player.x = (goal.px1 + goal.px2) / 2;
     player.y = (goal.py1 + goal.py2) / 2;
     var angle = Math.abs(Math.atan2(player.y, player.x)) * 180 / Math.PI;
@@ -203,7 +202,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     }
     player.goal = goal;
     for(var i in this.balls) {
-      this.balls[i].targets[player.localId] = player;
+      this.balls[i].targets.players[player.localId] = player;
     }
   } // fin assignAttributesToPlayer
 
@@ -223,7 +222,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     this.playerCount++; // Incrementation du compteur de joueurs
     this.assignAttributesToPlayer(player); // Ajouter des attributs au joueur
     player.joinedGame = true; // Le joueur à rejoint un jeu
-    this.sendMap({ ww: this.map.wallWidth, walls: Wall.list, goals: Goal.list }); // Envoyer le map au joueur
+    this.sendMap(); // Envoyer le map au joueur
     for(var i in this.players) {
       this.pushPlayerToInitPack(this.players[i]); // Mettre le joueur dans le pack d'initialization
     }
@@ -261,8 +260,8 @@ var Game = function(player) { // Le premier joueur est passer à la création du
   }
 
   // Fonction pour envoyer la map
-  this.sendMap = function(map) {
-    this.sendPackage('map', { wallWidth: map.wallWidth, walls: map.walls, goals: map.goals });
+  this.sendMap = function() {
+    this.sendPackage('map', { wallWidth: this.map.wallWidth, walls: this.map.walls, goals: this.map.goals });
   }
 
   // Fonction pour mettre en joueur dan le pack d'initialization
@@ -357,7 +356,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     for(var i in this.balls) { // Pour chaque ball
       var ball = this.balls[i];
 
-      ball.update(); // Mettre à jour le ball
+      ball.update(this.players, this.map.walls, this.map.goals); // Mettre à jour le ball
 
       pack.push({
         id: ball.id,
@@ -386,7 +385,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
   }
 
   this.assignAttributesToPlayer(player); // Donner des attributs au joueur
-  this.sendMap({ ww: this.map.wallWidth, walls: Wall.list, goals: Goal.list }); // Envoyer la map au joueurs
+  this.sendMap(); // Envoyer la map au joueurs
   this.pushPlayerToInitPack(player); // Mettre le joueur dans le pack d'initialization
   for(var i in this.balls) { // Pour tout les balls
     this.pushBallToInitPack(this.balls[i]); // Mettre le ball dans le pack d'initialization
@@ -401,23 +400,35 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
 // La classe pour la map
 var Map = function(game) {
-  var w = game.width; // La longeur de la map
-  var h = game.height; // La largeur de la map
-  var ww = game.wallWidth; // L'épaisseur des murs
+  // var w = game.width; // La longeur de la map
+  // var h = game.height; // La largeur de la map
+  // var ww = game.wallWidth; // L'épaisseur des murs
+  //
+  // this.wallWidth = game.wallWidth;
 
-  this.wallWidth = game.wallWidth;
+  //this.ww = ww;
 
-  this.ww = ww;
+  this.walls = {};
+  this.goals = {};
 
   console.log("REAL WALLS");
-  var wall = new Wall(0, 60);
-  Wall.list[wall.id] = wall;
+  var wall = new Wall(0, 30);
+  this.walls[wall.id] = wall;
 
-  wall = new Wall(120, 180);
-  Wall.list[wall.id] = wall;
+  wall = new Wall(30, 60);
+  this.walls[wall.id] = wall;
 
-  wall = new Wall(240, 300);
-  Wall.list[wall.id] = wall;
+  wall = new Wall(120, 150);
+  this.walls[wall.id] = wall;
+
+  wall = new Wall(150, 180);
+  this.walls[wall.id] = wall;
+
+  wall = new Wall(240, 270);
+  this.walls[wall.id] = wall;
+
+  wall = new Wall(270, 300);
+  this.walls[wall.id] = wall;
 
 
   // console.log("TEMP WALLS");
@@ -433,13 +444,13 @@ var Map = function(game) {
 
 
   var goal = new Goal(60, 120, 1);
-  Goal.list[goal.localId] = goal;
+  this.goals[goal.localId] = goal;
 
   goal = new Goal(180, 240, 2);
-  Goal.list[goal.localId] = goal;
+  this.goals[goal.localId] = goal;
 
   goal = new Goal(300, 0, 3);
-  Goal.list[goal.localId] = goal;
+  this.goals[goal.localId] = goal;
 } // fin classe Map
 
 
@@ -457,11 +468,13 @@ var Wall = function(angle1, angle2) {
   this.x2 = Math.cos(angle2 * Math.PI / 180) * 350;
   this.y2 = Math.sin(angle2 * Math.PI / 180) * 350;
 
-  if(this.angle2 == 0) {
-    this.rotation = this.angle2 + (360 - this.angle1);
-  } else {
-    this.rotation = this.angle2 + (this.angle2 - this.angle1);
-  }
+  // if(this.angle2 == 0) {
+  //   this.rotation = this.angle2 + (360 - this.angle1);
+  // } else {
+  //   this.rotation = this.angle2 + (this.angle2 - this.angle1);
+  // }
+
+  this.rotation = ((180 - Math.abs(this.angle1 - this.angle2)) / 2) - this.angle1;
 
   console.log("ROTATION: " + this.rotation);
 
@@ -527,14 +540,14 @@ var Ball = function(game) {
   for(var i in game.players) {
     this.targets.players[i] = game.players[i];
   }
-  for(var i in Wall.list) {
-    this.targets.walls[i] = Wall.list[i];
+  for(var i in game.map.walls) {
+    this.targets.walls[i] = game.map.walls[i];
   }
-  for(var i in Goal.list) {
-    this.targets.goals[i] = Goal.list[i];
+  for(var i in game.map.goals) {
+    this.targets.goals[i] = game.map.goals[i];
   }
 
-  this.update = function() {
+  this.update = function(players, walls, goals) {
     var newPos = this.accelerate();
     var item, foundIntercept, goal, rotation;
     for(var i in this.targets.players) {
@@ -582,10 +595,14 @@ var Ball = function(game) {
     }
 
     if(foundIntercept) { // Si le ball est touché par un joueur
+      console.log("ROTATION: " + rotation);
+      console.log("INTERCEPT: " + foundIntercept.angle);
+      var hoek = rotation + foundIntercept.angle;
+      console.log("ROTATION + INTERCEPT" + hoek);
       this.x = foundIntercept.x;
       this.y = foundIntercept.y;
-      this.spdX = Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
-      this.spdY = Math.sin((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
+      this.spdX = -Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
+      this.spdY = -Math.sin((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
     }
 
     this.x += this.spdX;
