@@ -199,6 +199,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       player.angle = (goal.angle1 + goal.angle2) / 2;
     }
     player.rotation = goal.angle2 + ((180 - Math.abs(goal.angle1 - goal.angle2)) / 2);
+    player.position = goal.length/2;
     player.goal = goal;
   } // fin assignAttributesToPlayer
 
@@ -595,10 +596,10 @@ var Goal = function(angle1, angle2, localId) {
   this.y1 = Math.sin(angle1 * Math.PI / 180) * 350;
   this.x2 = Math.cos(angle2 * Math.PI / 180) * 350;
   this.y2 = Math.sin(angle2 * Math.PI / 180) * 350;
-  this.px1 = Math.cos(angle1 * Math.PI / 180) * 340;
-  this.py1 = Math.sin(angle1 * Math.PI / 180) * 340;
-  this.px2 = Math.cos(angle2 * Math.PI / 180) * 340;
-  this.py2 = Math.sin(angle2 * Math.PI / 180) * 340;
+  this.px1 = Math.cos(angle1 * Math.PI / 180) * 335;
+  this.py1 = Math.sin(angle1 * Math.PI / 180) * 335;
+  this.px2 = Math.cos(angle2 * Math.PI / 180) * 335;
+  this.py2 = Math.sin(angle2 * Math.PI / 180) * 335;
 
   var eq = getEquation(this.x1, this.y1, this.x2, this.y2);
 
@@ -609,6 +610,8 @@ var Goal = function(angle1, angle2, localId) {
 
   this.pa = eq.a;
   this.pb = eq.b;
+
+  this.length = Math.sqrt(Math.pow(this.x1 - this.x2, 2) + Math.pow(this.y1 - this.y2, 2));
 }
 
 Goal.list = {}
@@ -841,7 +844,7 @@ var Player = function(socket, username, isAI) {
 
 
 
-    if(this.moveLeft && this.angle < leftAngle-5) {
+    if(this.moveLeft && this.position > this.width) {
       // this.angle += this.speed;
       // point = this.getPosition();
       // this.x = point.x;
@@ -853,7 +856,8 @@ var Player = function(socket, username, isAI) {
       var y = this.goal.a * x;
       this.x += x;
       this.y += y;
-    } else if(this.moveRight && this.angle > rightAngle+5) {
+      this.position -= this.speed;
+    } else if(this.moveRight && this.position < this.goal.length-this.width) {
       // this.angle -= this.speed;
       // point = this.getPosition();
       // this.x = point.x;
@@ -865,6 +869,7 @@ var Player = function(socket, username, isAI) {
       var y = this.goal.a * x;
       this.x += x;
       this.y += y;
+      this.position += this.speed;
     }
     this.setSides();
   }

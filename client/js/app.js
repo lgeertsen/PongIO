@@ -11,6 +11,10 @@ ctx.translate(400, 400);
 var ID;
 var ROTATED = false;
 
+var Img = {};
+Img.player = new Image();
+Img.player.src = '/client/img/player.png';
+
 
 ///////////////////////////
 //      START GAME       //
@@ -258,11 +262,19 @@ var drawPlayers = function() {
   for(var i in Player.list) {
     var p = Player.list[i];
     //ctx.fillRect(p.x, p.y, p.width, p.height);
-    ctx.beginPath();
-    ctx.moveTo(p.x1, p.y1);
-    ctx.lineTo(p.x2, p.y2);
-    ctx.closePath();
-    ctx.stroke();
+    var angle = (p.rotation-90) * Math.PI / 180;
+    ctx.rotate(-angle);
+    ctx.drawImage(Img.player,
+      0, 0, Img.player.width, Img.player.height,
+      p.x-p.width, p.y-2, p.width*2, 15);
+
+    ctx.rotate(angle);
+
+      ctx.beginPath();
+      ctx.moveTo(p.x1, p.y1);
+      ctx.lineTo(p.x2, p.y2);
+      ctx.closePath();
+      ctx.stroke();
   }
 }
 
