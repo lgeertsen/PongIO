@@ -7,10 +7,6 @@ html, body {
 	overflow: hidden;
 }
 
-#chat-input {
-  color: #fff;
-}
-
 #gameWrapper {
 	height: 800px;
 }

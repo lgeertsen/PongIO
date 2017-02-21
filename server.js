@@ -195,11 +195,10 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     var angle = Math.abs(Math.atan2(player.y, player.x)) * 180 / Math.PI;
     if(goal.angle2 == 0) {
       player.angle = (goal.angle1 + 360) / 2;
-      player.rotation = goal.angle2 + (360 - goal.angle1);
     } else {
       player.angle = (goal.angle1 + goal.angle2) / 2;
-      player.rotation = goal.angle2 + (goal.angle2 - goal.angle1);
     }
+    player.rotation = goal.angle2 + ((180 - Math.abs(goal.angle1 - goal.angle2)) / 2);
     player.goal = goal;
   } // fin assignAttributesToPlayer
 
@@ -310,9 +309,16 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     this.sendPackage('update', pack); // Envoyer le pack au joueurs
   }
 
+  this.count = 0;
 
   //Fonction pour la gestion de l'ia
-  this.ai = function(player, ball) {
+  this.ai = function(ball) {
+    if(this.count < 5) {
+      this.count++;
+      return;
+    } else {
+
+    }
       // for(var i in ball.targets.walls){
       //   var w = ball.targets.walls[i];
       //   var intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
@@ -323,104 +329,118 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       //     intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
       //   }
       // }
-      var b = ball;
+      this.count = 0;
+      var b = new Ball();
+      b.x = ball.x;
+      b.y = ball.y;
+      b.spdX = ball.spdX;
+      b.spdY = ball.spdY;
       var newPosition = b.accelerate();
       //var interception = intercept(b.x, b.y, newPosition.x, newPosition.y, player.goal.x1, player.goal.y1, player.goal.x2, player.goal.y2, false);
       var interception;
+      var i = 0;
       while(!interception) {
-        interception = b.update(this.players, this.map.walls, this.map.goals);
+        interception = b.update(this.players, this.map.walls, this.map.goals, true);
+        i++;
+        console.log(i);
       }
-      if(interception && interception.id == player.localId) {
-
-      }
-      if(!interception){
-        b.x = newPosition.x;
-        b.y = newPosition.y;
-        b.dx = newPosition.dx;
-        b.dy = newPosition.dy;
-        b.speed = newPosition.speed;
-        b.spdY = newPosition.spdY;
-        b.spdX = newPosition.spdX;
-        newPosition = b.accelerate();
-        interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
-      }else{
-        console.log('hamza');
-        if(ball.spdX<0 && ball.spdY<0){
-          if(interception.x<player.x){
-            player.moveDown = true;
-          }else{
-            player.moveUp = true;
+      if(interception) {
+        var g = this.map.goals[interception.id];
+        console.log("found interception in goal " + g.localId);
+        var p = this.players[g.localId];
+        if(p.isAI) {
+          console.log("interception at: " + interception.x + " " + interception.y);
+          var d1 = Math.sqrt(Math.pow(p.x-g.x1, 2) + Math.pow(p.y-g.y1, 2));
+          var d2 = Math.sqrt(Math.pow(interception.x-g.x1, 2) + Math.pow(interception.y-g.y1, 2));
+          var d = Math.abs(d1-d2);
+          if (d1 < d2 && d > 10) {
+            p.moveLeft = true;
+            p.moveRight = false;
+          } else if(d1 > d2 && d > 10) {
+            p.moveLeft = false;
+            p.moveRight = true;
+          } else {
+            p.moveLeft = false;
+            p.moveRight = false;
           }
-        }else if(ball.spdX<0 && ball.spdY>0){
-          if(player.x<interception.x){
-            player.moveUp = true;
-          }else{
-            player.moveDown = true;
-          }
-        }else if(ball.spdX>0 && ball.spdY<0){
-          if(player.x<interception.x){
-            player.moveUp = true;
-          }else{
-            player.moveDown = true;
-          }
-        }else if(ball.spdX>0 && ball.spdY>0){
-          if(player.x>interception.x){
-            player.moveUp = true;
-          }else{
-            player.moveDown = true;
-          }
-        }else if(player.x==interception.x){
-          player.moveDown = false;
-          player.moveUp = false;
         }
-        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'left'){
-        //   player.moveUp = true;
-        // }
-        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'right') {
-        //   player.moveDown = true;
-        // }
-        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'top') {
-        //   player.moveUp = true;
-        // }
-        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'down') {
-        //   player.moveDown = true;
-        // }
-        console.log('lllllllllllllllllllllll');
       }
+      // if(!interception){
+      //   b.x = newPosition.x;
+      //   b.y = newPosition.y;
+      //   b.dx = newPosition.dx;
+      //   b.dy = newPosition.dy;
+      //   b.speed = newPosition.speed;
+      //   b.spdY = newPosition.spdY;
+      //   b.spdX = newPosition.spdX;
+      //   newPosition = b.accelerate();
+      //   interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
+      // }else{
+      //   console.log('hamza');
+      //   if(ball.spdX<0 && ball.spdY<0){
+      //     if(interception.x<player.x){
+      //       player.moveDown = true;
+      //     }else{
+      //       player.moveUp = true;
+      //     }
+      //   }else if(ball.spdX<0 && ball.spdY>0){
+      //     if(player.x<interception.x){
+      //       player.moveUp = true;
+      //     }else{
+      //       player.moveDown = true;
+      //     }
+      //   }else if(ball.spdX>0 && ball.spdY<0){
+      //     if(player.x<interception.x){
+      //       player.moveUp = true;
+      //     }else{
+      //       player.moveDown = true;
+      //     }
+      //   }else if(ball.spdX>0 && ball.spdY>0){
+      //     if(player.x>interception.x){
+      //       player.moveUp = true;
+      //     }else{
+      //       player.moveDown = true;
+      //     }
+      //   }else if(player.x==interception.x){
+      //     player.moveDown = false;
+      //     player.moveUp = false;
+      //   }
+      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'left'){
+      //   //   player.moveUp = true;
+      //   // }
+      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'right') {
+      //   //   player.moveDown = true;
+      //   // }
+      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'top') {
+      //   //   player.moveUp = true;
+      //   // }
+      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'down') {
+      //   //   player.moveDown = true;
+      //   // }
+      //   console.log('lllllllllllllllllllllll');
+      // }
   }
 
   // Fonction pour le mise a jour des joueurs
   this.updatePlayers = function() {
     var pack = [];
+    for(var i in this.balls) {
+      var ball = this.balls[i];
+      this.ai(ball); // Appel de la fonction ai pour chaque ball dans le jeu
+    }
+
     for(var i in this.players) { // Pour chaque joueur
       var player = this.players[i];
-      if(player.isAI) { // Si le joueur est un AI
-        for(var i in this.balls) {
-          var ball = this.balls[i];
-          //this.ai(player, ball); // Appel de la fonction ai pour chaque ball dans le jeu
-        }
-        player.update(); // Mettre a jour le AI
-          pack.push({
-            id: player.id,
-            x: player.x,
-            y: player.y,
-            x1: player.x1,
-            y1: player.y1,
-            x2: player.x2,
-            y2: player.y2
-          });
-      } else { // Sinon mettre a jour le joueur
-        player.update();
-        pack.push({
-          id: player.id,
-          x: player.x,
-          y: player.y,
-          x1: player.x1,
-          y1: player.y1,
-          x2: player.x2,
-          y2: player.y2
-        });
-      }
+      player.update();
+      pack.push({
+        id: player.id,
+        x: player.x,
+        y: player.y,
+        x1: player.x1,
+        y1: player.y1,
+        x2: player.x2,
+        y2: player.y2
+      });
     }
     return pack;
   }
@@ -638,7 +658,6 @@ var Ball = function(game) {
         foundIntercept = intercept(this.x, this.y, newPos.dx, newPos.dy, p.x1, p.y1, p.x2, p.y2, false);
         if(foundIntercept) {
           rotation = p.rotation;
-          console.log(foundIntercept);
         }
       }
     }
@@ -661,7 +680,7 @@ var Ball = function(game) {
           g = goals[i];
           goal = intercept(this.x, this.y, newPos.x, newPos.y, g.x1, g.y1, g.x2, g.y2, true);
           if(goal) {
-            id = goal.id;
+            id = goals[i].localId;
           }
         }
       }
@@ -674,22 +693,16 @@ var Ball = function(game) {
       if(forAI) {
         return {id: id, x: goal.x, y: goal.y};
       }
+      this.reset();
       //console.log(goal);
       //this.game.goal(1, this);
       //this.reset(1);
 
       // this.x = goal.x;
       // this.y = goal.y;
-
-
-      this.reset();
     }
 
     if(foundIntercept) { // Si le ball est touché par un joueur
-      console.log("ROTATION: " + rotation);
-      console.log("INTERCEPT: " + foundIntercept.angle);
-      var hoek = rotation + foundIntercept.angle;
-      console.log("ROTATION + INTERCEPT" + hoek);
       this.x = foundIntercept.x;
       this.y = foundIntercept.y;
       this.spdX = Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
@@ -700,45 +713,6 @@ var Ball = function(game) {
     this.y += this.spdY;
 
     this.setSides();
-  }
-
-
-  //fonction qui detecte si il y a une intersection entre la ball et un element
-  this.ballIntercept = function(item, dx, dy, debug) {
-    var inter;
-    if(dx < 0) { // Si le ball bouge vers la gauche
-      var right = item.x2 + this.radius
-      inter = intercept(this.x, this.y,
-                                 this.x + dx, this.y + dy,
-                                 right, item.y1 - this.radius,
-                                 right, item.y2 + this.radius,
-                                 'right', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté droite du joueur
-    } else if(dx > 0) { // Sinon si le ball bouge vers la droite
-      var left = item.x1 - this.radius;
-      inter = intercept(this.x, this.y,
-                                 this.x + dx, this.y + dy,
-                                 left, item.y1 - this.radius,
-                                 left, item.y2 + this.radius,
-                                 'left', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté gauche du joueur
-    } // fin si
-    if(!inter) { // Si il n'y a pas encore eu d'interception
-      if (dy < 0) { // Si le ball bouge vers le haut
-        var bottom = item.y2 + this.radius;
-        inter = intercept(this.x, this.y,
-                                   this.x + dx, this.y + dy,
-                                   item.x1 - this.radius, bottom,
-                                   item.x2 + this.radius, bottom,
-                                   'bottom', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté haute du joueur
-      } else if (dy > 0) { // Sinon si le ball bouge vers le bas
-        var top = item.y2 - this.radius;
-        inter = intercept(this.x, this.y,
-                                   this.x + dx, this.y + dy,
-                                   item.x1 - this.radius, top,
-                                   item.x2 + this.radius, top,
-                                   'top', debug); // Appel de la fonction d'interception pour calculer si il y a une interception avec le coté bas du joueur
-      } // fin si
-    } // fin si
-    return inter;
   }
 
   this.reset = function(id) {
@@ -920,8 +894,10 @@ Player.onconnect = function(socket, username) {
   socket.on('sendMessage', function(data) {
     var room = gameServer.rooms[player.roomId];
     for(var i in room.players) {
-      var socket = SOCKET_LIST[room.players[i].id];
-      socket.emit('addToChat', player.username + ": " + data);
+      if(!room.players[i].isAI) {
+        var socket = SOCKET_LIST[room.players[i].id];
+        socket.emit('addToChat', player.username + ": " + data);
+      }
     }
   });
 }
