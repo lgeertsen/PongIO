@@ -95,6 +95,9 @@ var onSocket = function(socket) {
       var pack = data.players[i];
       var p = Player.list[pack.id];
       if(p) {
+        if(pack.position !== undefined) {
+          p.position = pack.position;
+        }
         if(pack.x !== undefined) {
           p.x = pack.x;
         }
@@ -181,15 +184,16 @@ var Player = function(initPack) {
   this.id = initPack.id;
   this.localId = initPack.localId;
   this.username = initPack.username;
-  this.rotation = initPack.rotation;
+  this.rotation = initPack.rotation
+  this.angle = initPack.angle;
+  console.log(this.localId + " " + this.rotation + " " + this.angle);
 
   if(!ROTATED && this.id == ID) {
-    //console.log(ID);
-    ctx.rotate(-this.rotation / 180 * Math.PI + (Math.PI/2));
-    console.log(this.rotation);
+    ctx.rotate(-this.angle / 180 * Math.PI + (Math.PI/2));
     ROTATED = true;
   }
 
+  this.position = initPack.position;
   this.x = initPack.x;
   this.y = initPack.y;
   this.x1 = initPack.x1;
@@ -198,6 +202,7 @@ var Player = function(initPack) {
   this.y2 = initPack.y2;
   this.width = initPack.width;
   this.height = initPack.height;
+  this.length = initPack.length;
   this.color = initPack.color;
   this.score = initPack.score;
 
@@ -262,19 +267,22 @@ var drawPlayers = function() {
   for(var i in Player.list) {
     var p = Player.list[i];
     //ctx.fillRect(p.x, p.y, p.width, p.height);
-    var angle = (p.rotation-90) * Math.PI / 180;
-    ctx.rotate(-angle);
+    var angle = (p.angle-90) * Math.PI / 180;
+    //var angle = (-p.angle / 180 * Math.PI) + (Math.PI/2);
+    ctx.rotate(angle);
+    var x = p.position - p.length/2;
+    var y = 290;
     ctx.drawImage(Img.player,
       0, 0, Img.player.width, Img.player.height,
-      p.x-p.width, p.y-2, p.width*2, 15);
+      x-p.width, y, p.width*2, 15);
 
-    ctx.rotate(angle);
+      // ctx.beginPath();
+      // ctx.moveTo(p.x1, p.y1);
+      // ctx.lineTo(p.x2, p.y2);
+      // ctx.closePath();
+      // ctx.stroke();
 
-      ctx.beginPath();
-      ctx.moveTo(p.x1, p.y1);
-      ctx.lineTo(p.x2, p.y2);
-      ctx.closePath();
-      ctx.stroke();
+    ctx.rotate(-angle);
   }
 }
 

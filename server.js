@@ -268,7 +268,9 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       id: player.id,
       localId: player.localId,
       username: player.username,
-      rotation: player.angle,
+      angle: player.angle,
+      rotation: player.rotation,
+      position: player.position,
       x: player.x,
       y: player.y,
       x1: player.x1,
@@ -277,6 +279,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       y2: player.y2,
       width: player.width,
       height: player.height,
+      length: player.goal.length,
       color: player.color,
       score: player.score
     });
@@ -313,7 +316,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
 
   //Fonction pour la gestion de l'ia
-  this.ai = function(player, ball) {
+  this.ai = function(ball) {
       // for(var i in ball.targets.walls){
       //   var w = ball.targets.walls[i];
       //   var intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
@@ -324,70 +327,74 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       //     intercept = ball.ballIntercept(w, newPosition.dx, newPosition.dy, false);
       //   }
       // }
-      var b = ball;
-      var newPosition = b.accelerate();
+      var b = new Ball();
+      b.x = ball.x;
+      b.y = ball.y;
+      b.spdX = ball.spdX;
+      b.spdY = ball.spdY;
+      //var newPosition = b.accelerate();
       //var interception = intercept(b.x, b.y, newPosition.x, newPosition.y, player.goal.x1, player.goal.y1, player.goal.x2, player.goal.y2, false);
       var interception;
       while(!interception) {
-        interception = b.update(this.players, this.map.walls, this.map.goals);
+        interception = b.update(this.players, this.map.walls, this.map.goals, true);
       }
-      if(interception && interception.id == player.localId) {
+      if(interception) {
 
       }
-      if(!interception){
-        b.x = newPosition.x;
-        b.y = newPosition.y;
-        b.dx = newPosition.dx;
-        b.dy = newPosition.dy;
-        b.speed = newPosition.speed;
-        b.spdY = newPosition.spdY;
-        b.spdX = newPosition.spdX;
-        newPosition = b.accelerate();
-        interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
-      }else{
-        console.log('hamza');
-        if(ball.spdX<0 && ball.spdY<0){
-          if(interception.x<player.x){
-            player.moveDown = true;
-          }else{
-            player.moveUp = true;
-          }
-        }else if(ball.spdX<0 && ball.spdY>0){
-          if(player.x<interception.x){
-            player.moveUp = true;
-          }else{
-            player.moveDown = true;
-          }
-        }else if(ball.spdX>0 && ball.spdY<0){
-          if(player.x<interception.x){
-            player.moveUp = true;
-          }else{
-            player.moveDown = true;
-          }
-        }else if(ball.spdX>0 && ball.spdY>0){
-          if(player.x>interception.x){
-            player.moveUp = true;
-          }else{
-            player.moveDown = true;
-          }
-        }else if(player.x==interception.x){
-          player.moveDown = false;
-          player.moveUp = false;
-        }
-        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'left'){
-        //   player.moveUp = true;
-        // }
-        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'right') {
-        //   player.moveDown = true;
-        // }
-        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'top') {
-        //   player.moveUp = true;
-        // }
-        // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'down') {
-        //   player.moveDown = true;
-        // }
-        console.log('lllllllllllllllllllllll');
-      }
+      // if(!interception){
+      //   b.x = newPosition.x;
+      //   b.y = newPosition.y;
+      //   b.dx = newPosition.dx;
+      //   b.dy = newPosition.dy;
+      //   b.speed = newPosition.speed;
+      //   b.spdY = newPosition.spdY;
+      //   b.spdX = newPosition.spdX;
+      //   newPosition = b.accelerate();
+      //   interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
+      // }else{
+      //   console.log('hamza');
+      //   if(ball.spdX<0 && ball.spdY<0){
+      //     if(interception.x<player.x){
+      //       player.moveDown = true;
+      //     }else{
+      //       player.moveUp = true;
+      //     }
+      //   }else if(ball.spdX<0 && ball.spdY>0){
+      //     if(player.x<interception.x){
+      //       player.moveUp = true;
+      //     }else{
+      //       player.moveDown = true;
+      //     }
+      //   }else if(ball.spdX>0 && ball.spdY<0){
+      //     if(player.x<interception.x){
+      //       player.moveUp = true;
+      //     }else{
+      //       player.moveDown = true;
+      //     }
+      //   }else if(ball.spdX>0 && ball.spdY>0){
+      //     if(player.x>interception.x){
+      //       player.moveUp = true;
+      //     }else{
+      //       player.moveDown = true;
+      //     }
+      //   }else if(player.x==interception.x){
+      //     player.moveDown = false;
+      //     player.moveUp = false;
+      //   }
+      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'left'){
+      //   //   player.moveUp = true;
+      //   // }
+      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'right') {
+      //   //   player.moveDown = true;
+      //   // }
+      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'top') {
+      //   //   player.moveUp = true;
+      //   // }
+      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'down') {
+      //   //   player.moveDown = true;
+      //   // }
+      //   console.log('lllllllllllllllllllllll');
+      // }
   }
 
   // Fonction pour le mise a jour des joueurs
@@ -395,14 +402,15 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     var pack = [];
     for(var i in this.players) { // Pour chaque joueur
       var player = this.players[i];
+      for(var i in this.balls) {
+        var ball = this.balls[i];
+        //this.ai(ball); // Appel de la fonction ai pour chaque ball dans le jeu
+      }
       if(player.isAI) { // Si le joueur est un AI
-        for(var i in this.balls) {
-          var ball = this.balls[i];
-          //this.ai(player, ball); // Appel de la fonction ai pour chaque ball dans le jeu
-        }
         player.update(); // Mettre a jour le AI
           pack.push({
             id: player.id,
+            position: player.position,
             x: player.x,
             y: player.y,
             x1: player.x1,
@@ -414,6 +422,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
         player.update();
         pack.push({
           id: player.id,
+          position: player.position,
           x: player.x,
           y: player.y,
           x1: player.x1,
