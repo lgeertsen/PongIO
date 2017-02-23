@@ -173,7 +173,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
   this.constructBalls = function() {      // Creation de tout les balls
     var balls = [];
     for(var n = 0 ; n < this.ballCount ; n++)
-      balls.push(new Ball(this)); // Création d'une balle et la mettre dans la liste balls
+      balls.push(new Ball(this.id)); // Création d'une balle et la mettre dans la liste balls
     return balls; // Renvoyer la liste des balls
   }
   this.balls = this.constructBalls();     // Création de tout les balls pour le jeu
@@ -317,12 +317,6 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
   //Fonction pour la gestion de l'ia
   this.ai = function(ball) {
-    if(this.count < 5) {
-      this.count++;
-      return;
-    } else {
-
-    }
       this.count = 0;
       var b = new Ball();
       b.x = ball.x;
@@ -342,18 +336,20 @@ var Game = function(player) { // Le premier joueur est passer à la création du
         var p = this.players[g.localId];
         if(p.isAI) {
           console.log("interception at: " + interception.x + " " + interception.y);
-          var d1 = Math.sqrt(Math.pow(p.x-g.x1, 2) + Math.pow(p.y-g.y1, 2));
-          var d2 = Math.sqrt(Math.pow(interception.x-g.x1, 2) + Math.pow(interception.y-g.y1, 2));
-          var d = Math.abs(d1-d2);
-          if (d1 < d2 && d > 10) {
-            p.moveLeft = true;
-            p.moveRight = false;
-          } else if(d1 > d2 && d > 10) {
-            p.moveLeft = false;
-            p.moveRight = true;
-          } else {
-            p.moveLeft = false;
-            p.moveRight = false;
+          //var d1 = Math.sqrt(Math.pow(p.x-g.x1, 2) + Math.pow(p.y-g.y1, 2));
+          var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
+          var d2 = Math.sqrt(Math.pow(interception.x-p.x, 2) + Math.pow(interception.y-p.y, 2));
+          if(d2 > 30) {
+            if (d < p.position) {
+              p.moveLeft = true;
+              p.moveRight = false;
+            } else if(d > p.position) {
+              p.moveLeft = false;
+              p.moveRight = true;
+            } else {
+              p.moveLeft = false;
+              p.moveRight = false;
+            }
           }
         }
       }
@@ -411,52 +407,30 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       //   // }
       //   console.log('lllllllllllllllllllllll');
       // }
+      // var newPosition = ball.accelerate();
+      // for(var i in this.map.goals){
+      //   var g = this.map.goals[i];
+      //   var interception = intercept(ball.x,ball.y,newPosition.dx,newPosition.dy,g.x1,g.y1,g.x2,g.y2);
+      //   if(interception){
+      //     var d = Math.sqrt(Math.pow(interception.x-g.x1, 2) + Math.pow(interception.y-g.y1, 2));
+      //     if(d<)
+      //   }
   }
 
   // Fonction pour le mise a jour des joueurs
   this.updatePlayers = function() {
     var pack = [];
-    for(var i in this.balls) {
-      var ball = this.balls[i];
-      this.ai(ball); // Appel de la fonction ai pour chaque ball dans le jeu
-    }
+    // for(var i in this.balls) {
+    //   var ball = this.balls[i];
+    //   this.ai(ball); // Appel de la fonction ai pour chaque ball dans le jeu
+    // }
 
     for(var i in this.players) { // Pour chaque joueur
       var player = this.players[i];
-<<<<<<< HEAD
-      for(var i in this.balls) {
-        var ball = this.balls[i];
-        //this.ai(ball); // Appel de la fonction ai pour chaque ball dans le jeu
-      }
-      if(player.isAI) { // Si le joueur est un AI
-        player.update(); // Mettre a jour le AI
-          pack.push({
-            id: player.id,
-            position: player.position,
-            x: player.x,
-            y: player.y,
-            x1: player.x1,
-            y1: player.y1,
-            x2: player.x2,
-            y2: player.y2
-          });
-      } else { // Sinon mettre a jour le joueur
         player.update();
         pack.push({
-          id: player.id,
-          position: player.position,
-          x: player.x,
-          y: player.y,
-          x1: player.x1,
-          y1: player.y1,
-          x2: player.x2,
-          y2: player.y2
-        });
-      }
-=======
-      player.update();
-      pack.push({
         id: player.id,
+        position: player.position,
         x: player.x,
         y: player.y,
         x1: player.x1,
@@ -464,7 +438,6 @@ var Game = function(player) { // Le premier joueur est passer à la création du
         x2: player.x2,
         y2: player.y2
       });
->>>>>>> 175c59e68acf91c79f0e42465a1f71973bf619b3
     }
     return pack;
   }
@@ -678,12 +651,14 @@ var Ball = function(game) {
   this.update = function(players, walls, goals, forAI) {
     var newPos = this.accelerate();
     var item, foundIntercept, goal, rotation;
+    var isPlayer = false;
     for(var i in players) {
       if(!foundIntercept) {
         p = players[i];
         foundIntercept = intercept(this.x, this.y, newPos.dx, newPos.dy, p.x1, p.y1, p.x2, p.y2, false);
         if(foundIntercept) {
           rotation = p.rotation;
+          isPlayer = true;
         }
       }
     }
@@ -739,6 +714,10 @@ var Ball = function(game) {
     this.y += this.spdY;
 
     this.setSides();
+
+    if(!forAI && isPlayer) {
+      gameServer.rooms[this.game].ai(this);
+    }
   }
 
   this.reset = function(id) {
@@ -749,6 +728,7 @@ var Ball = function(game) {
     this.spdX = Math.cos(a / 180 * Math.PI) * this.speed;
     this.spdY = Math.sin(a / 180 * Math.PI) * this.speed;
     this.setSides();
+    gameServer.rooms[this.game].ai(this);
   }
 
   this.setSides = function() {
