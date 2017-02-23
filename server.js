@@ -195,7 +195,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     } else {
       player.angle = (goal.angle1 + goal.angle2) / 2;
     }
-    player.rotation = goal.angle2 + ((180 - Math.abs(goal.angle1 - goal.angle2)) / 2);
+    player.rotation = goal.rotation;
     player.position = goal.length/2;
     player.destination = player.position;
     player.goal = goal;
@@ -321,6 +321,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       b.y = ball.y;
       b.spdX = ball.spdX;
       b.spdY = ball.spdY;
+      b.game = ball.game;
       var newPosition = b.accelerate();
       //var interception = intercept(b.x, b.y, newPosition.x, newPosition.y, player.goal.x1, player.goal.y1, player.goal.x2, player.goal.y2, false);
       var interception;
@@ -330,78 +331,14 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       }
       if(interception) {
         var g = this.map.goals[interception.id];
-        console.log("found interception in goal " + g.localId);
+        //console.log("found interception in goal " + g.localId);
         var p = this.players[g.localId];
         if(p.isAI) {
-          console.log("interception at: " + interception.x + " " + interception.y);
-          //var d1 = Math.sqrt(Math.pow(p.x-g.x1, 2) + Math.pow(p.y-g.y1, 2));
+          //console.log("interception at: " + interception.x + " " + interception.y);
           var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
           p.destination = d;
-          //var d2 = Math.sqrt(Math.pow(interception.x-p.x, 2) + Math.pow(interception.y-p.y, 2));
         }
       }
-      // if(!interception){
-      //   b.x = newPosition.x;
-      //   b.y = newPosition.y;
-      //   b.dx = newPosition.dx;
-      //   b.dy = newPosition.dy;
-      //   b.speed = newPosition.speed;
-      //   b.spdY = newPosition.spdY;
-      //   b.spdX = newPosition.spdX;
-      //   newPosition = b.accelerate();
-      //   interception = b.ballIntercept(player.goal,newPosition.dx,newPosition.dy,false);
-      // }else{
-      //   console.log('hamza');
-      //   if(ball.spdX<0 && ball.spdY<0){
-      //     if(interception.x<player.x){
-      //       player.moveDown = true;
-      //     }else{
-      //       player.moveUp = true;
-      //     }
-      //   }else if(ball.spdX<0 && ball.spdY>0){
-      //     if(player.x<interception.x){
-      //       player.moveUp = true;
-      //     }else{
-      //       player.moveDown = true;
-      //     }
-      //   }else if(ball.spdX>0 && ball.spdY<0){
-      //     if(player.x<interception.x){
-      //       player.moveUp = true;
-      //     }else{
-      //       player.moveDown = true;
-      //     }
-      //   }else if(ball.spdX>0 && ball.spdY>0){
-      //     if(player.x>interception.x){
-      //       player.moveUp = true;
-      //     }else{
-      //       player.moveDown = true;
-      //     }
-      //   }else if(player.x==interception.x){
-      //     player.moveDown = false;
-      //     player.moveUp = false;
-      //   }
-      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'left'){
-      //   //   player.moveUp = true;
-      //   // }
-      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'right') {
-      //   //   player.moveDown = true;
-      //   // }
-      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'top') {
-      //   //   player.moveUp = true;
-      //   // }
-      //   // if (player.x!=interception.x && player.y!=interception.y && interception.d == 'down') {
-      //   //   player.moveDown = true;
-      //   // }
-      //   console.log('lllllllllllllllllllllll');
-      // }
-      // var newPosition = ball.accelerate();
-      // for(var i in this.map.goals){
-      //   var g = this.map.goals[i];
-      //   var interception = intercept(ball.x,ball.y,newPosition.dx,newPosition.dy,g.x1,g.y1,g.x2,g.y2);
-      //   if(interception){
-      //     var d = Math.sqrt(Math.pow(interception.x-g.x1, 2) + Math.pow(interception.y-g.y1, 2));
-      //     if(d<)
-      //   }
   }
 
   // Fonction pour le mise a jour des joueurs
@@ -598,6 +535,8 @@ var Goal = function(angle1, angle2, localId) {
   this.pb = eq.b;
 
   this.length = Math.sqrt(Math.pow(this.x1 - this.x2, 2) + Math.pow(this.y1 - this.y2, 2));
+
+  this.rotation = this.angle2 + ((180 - Math.abs(this.angle1 - this.angle2)) / 2);
 }
 
 Goal.list = {}
@@ -640,7 +579,7 @@ var Ball = function(game) {
 
   this.update = function(players, walls, goals, forAI) {
     var newPos = this.accelerate();
-    var item, foundIntercept, goal, rotation;
+    var item, foundIntercept, goal, rotation, id;
     var isPlayer = false;
     for(var i in players) {
       if(!foundIntercept) {
@@ -649,6 +588,7 @@ var Ball = function(game) {
         if(foundIntercept) {
           rotation = p.rotation;
           isPlayer = true;
+          id = p.localId;
         }
       }
     }
@@ -664,7 +604,6 @@ var Ball = function(game) {
         }
       }
     }
-    var id;
     if(!foundIntercept) {
       for(var i in goals) {
         if(!goal) {
@@ -697,12 +636,23 @@ var Ball = function(game) {
       this.x = foundIntercept.x;
       this.y = foundIntercept.y;
       if(isPlayer) {
-
+        var p = gameServer.rooms[this.game].players[id];
+        var d = Math.sqrt(Math.pow(foundIntercept.x-p.x, 2) + Math.pow(foundIntercept.y-p.y, 2));
+        var d2 = Math.sqrt(Math.pow(foundIntercept.x-p.x1, 2) + Math.pow(foundIntercept.y-p.y1, 2));
+        var perc = d/p.width;
+        var angle = 90 - (45 * perc);
+        if(d2 < p.width) {
+          angle *= -1;
+        }
+        console.log("TOUCHED: " + foundIntercept.angle + "   LEAVING: " + angle + "   D: " + d);
+        this.spdX = Math.cos((angle + rotation) / 180 * Math.PI) * this.speed;
+        this.spdY = Math.sin((angle + rotation) / 180 * Math.PI) * this.speed;
       } else {
-
+        this.spdX = Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
+        this.spdY = Math.sin((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
       }
-      this.spdX = Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
-      this.spdY = Math.sin((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
+      this.x += this.spdX;
+      this.y += this.spdY;
     }
 
     this.x += this.spdX;
@@ -832,7 +782,7 @@ var Player = function(socket, username, isAI) {
 
   this.update = function() {
     if(this.isAI) {
-      if(Math.abs(this.destination - this.position) > 5) {
+      if(Math.abs(this.destination - this.position) > 25) {
         if (this.destination < this.position) {
           this.moveLeft = true;
           this.moveRight = false;
