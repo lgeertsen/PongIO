@@ -699,10 +699,9 @@ var Ball = function(game) {
       if(isPlayer) {
 
       } else {
-
+        this.spdX = Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
+        this.spdY = Math.sin((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
       }
-      this.spdX = Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
-      this.spdY = Math.sin((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
     }
 
     this.x += this.spdX;
