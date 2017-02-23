@@ -132,9 +132,6 @@ var GameServer = function() {
     this.rooms[room.id] = room;  // Ajouter le jeu au liste des jeux
 
     this.roomCount++;  // Incrementer le compteur des jeux
-
-    room.createAI();  // Mettre des AI sur tout les places vide du jeu
-    room.createAI();
   } // fin createGame
 
   // Mettre a jour tout les chambres
@@ -200,6 +197,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     }
     player.rotation = goal.angle2 + ((180 - Math.abs(goal.angle1 - goal.angle2)) / 2);
     player.position = goal.length/2;
+    player.destination = player.position;
     player.goal = goal;
   } // fin assignAttributesToPlayer
 
@@ -338,19 +336,8 @@ var Game = function(player) { // Le premier joueur est passer à la création du
           console.log("interception at: " + interception.x + " " + interception.y);
           //var d1 = Math.sqrt(Math.pow(p.x-g.x1, 2) + Math.pow(p.y-g.y1, 2));
           var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
-          var d2 = Math.sqrt(Math.pow(interception.x-p.x, 2) + Math.pow(interception.y-p.y, 2));
-          if(d2 > 30) {
-            if (d < p.position) {
-              p.moveLeft = true;
-              p.moveRight = false;
-            } else if(d > p.position) {
-              p.moveLeft = false;
-              p.moveRight = true;
-            } else {
-              p.moveLeft = false;
-              p.moveRight = false;
-            }
-          }
+          p.destination = d;
+          //var d2 = Math.sqrt(Math.pow(interception.x-p.x, 2) + Math.pow(interception.y-p.y, 2));
         }
       }
       // if(!interception){
@@ -479,8 +466,11 @@ var Game = function(player) { // Le premier joueur est passer à la création du
   this.assignAttributesToPlayer(player); // Donner des attributs au joueur
   this.sendMap(); // Envoyer la map au joueurs
   this.pushPlayerToInitPack(player); // Mettre le joueur dans le pack d'initialization
+  this.createAI();  // Mettre des AI sur tout les places vide du jeu
+  this.createAI();
   for(var i in this.balls) { // Pour tout les balls
     this.pushBallToInitPack(this.balls[i]); // Mettre le ball dans le pack d'initialization
+    this.ai(this.balls[i]);
   }
 }//Fin de la classe game
 
@@ -703,9 +693,14 @@ var Ball = function(game) {
       // this.y = goal.y;
     }
 
-    if(foundIntercept) { // Si le ball est touché par un joueur
+    if(foundIntercept) {
       this.x = foundIntercept.x;
       this.y = foundIntercept.y;
+      if(isPlayer) {
+
+      } else {
+
+      }
       this.spdX = Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
       this.spdY = Math.sin((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
     }
@@ -836,22 +831,22 @@ var Player = function(socket, username, isAI) {
   }
 
   this.update = function() {
-    var leftAngle = this.goal.angle1;
-    var rightAngle = this.goal.angle2;
-    if(leftAngle < this.angle) {
-      leftAngle += 360;
+    if(this.isAI) {
+      if(Math.abs(this.destination - this.position) > 5) {
+        if (this.destination < this.position) {
+          this.moveLeft = true;
+          this.moveRight = false;
+        } else if(this.destination > this.position) {
+          this.moveLeft = false;
+          this.moveRight = true;
+        }
+      } else {
+        this.moveLeft = false;
+        this.moveRight = false;
+      }
     }
-    if(rightAngle > this.angle) {
-      rightAngle -= 360;
-    }
-
-
 
     if(this.moveLeft && this.position > this.width) {
-      // this.angle += this.speed;
-      // point = this.getPosition();
-      // this.x = point.x;
-      // this.y = point.y;
       var x = (Math.sqrt(4 * Math.pow(this.speed, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
       if(this.angle < 180) {
         x *= -1;
@@ -861,10 +856,6 @@ var Player = function(socket, username, isAI) {
       this.y += y;
       this.position -= this.speed;
     } else if(this.moveRight && this.position < this.goal.length-this.width) {
-      // this.angle -= this.speed;
-      // point = this.getPosition();
-      // this.x = point.x;
-      // this.y = point.y;
       var x = (Math.sqrt(4 * Math.pow(this.speed, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
       if(this.angle > 180) {
         x *= -1;
