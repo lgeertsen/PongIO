@@ -418,16 +418,11 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     var pack = [];
     for(var i in this.balls) {
       var ball = this.balls[i];
-      this.ai(ball); // Appel de la fonction ai pour chaque ball dans le jeu
+      //this.ai(ball); // Appel de la fonction ai pour chaque ball dans le jeu
     }
 
     for(var i in this.players) { // Pour chaque joueur
       var player = this.players[i];
-<<<<<<< HEAD
-      for(var i in this.balls) {
-        var ball = this.balls[i];
-        //this.ai(ball); // Appel de la fonction ai pour chaque ball dans le jeu
-      }
       if(player.isAI) { // Si le joueur est un AI
         player.update(); // Mettre a jour le AI
           pack.push({
@@ -453,18 +448,6 @@ var Game = function(player) { // Le premier joueur est passer à la création du
           y2: player.y2
         });
       }
-=======
-      player.update();
-      pack.push({
-        id: player.id,
-        x: player.x,
-        y: player.y,
-        x1: player.x1,
-        y1: player.y1,
-        x2: player.x2,
-        y2: player.y2
-      });
->>>>>>> 175c59e68acf91c79f0e42465a1f71973bf619b3
     }
     return pack;
   }
