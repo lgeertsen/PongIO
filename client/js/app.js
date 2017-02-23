@@ -143,7 +143,7 @@ var onSocket = function(socket) {
   });
 
   socket.on('map', function(data) {
-    MAP.wallWidth = data.ww;
+    MAP.playerY = data.playerY;
     MAP.walls = data.walls;
     MAP.goals = data.goals;
   });
@@ -271,18 +271,18 @@ var drawPlayers = function() {
     //var angle = (-p.angle / 180 * Math.PI) + (Math.PI/2);
     ctx.rotate(angle);
     var x = p.position - p.length/2;
-    var y = 290;
+    var y = MAP.playerY;
     ctx.drawImage(Img.player,
       0, 0, Img.player.width, Img.player.height,
       x-p.width, y, p.width*2, 15);
 
-      // ctx.beginPath();
-      // ctx.moveTo(p.x1, p.y1);
-      // ctx.lineTo(p.x2, p.y2);
-      // ctx.closePath();
-      // ctx.stroke();
-
     ctx.rotate(-angle);
+
+    ctx.beginPath();
+    ctx.moveTo(p.x1, p.y1);
+    ctx.lineTo(p.x2, p.y2);
+    ctx.closePath();
+    ctx.stroke();
   }
 }
 
