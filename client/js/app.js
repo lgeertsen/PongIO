@@ -6,6 +6,7 @@ var screenHeight = window.innerHeight;
 var c = document.getElementById('ctx');
 var ctx = c.getContext('2d');
 ctx.translate(400, 400);
+c.style.marginLeft = ((screenWidth-800)/2) + "px";
 //c.width = screenWidth; c.height = screenHeight
 
 var ID;
@@ -14,6 +15,8 @@ var ROTATED = false;
 var Img = {};
 Img.player = new Image();
 Img.player.src = '/client/img/player.png';
+
+var leaderboard = document.getElementById('leaderboard');
 
 
 ///////////////////////////
@@ -155,6 +158,51 @@ var onSocket = function(socket) {
 
 
 
+intercept = function(x1, y1, x2, y2, x3, y3, x4, y4, debug) { // fonction pour calculer si il y une interception
+  // Fonction pour calculer l'intersection de deux segments de lignes (fait à partir d'un formule mathématique, retrouvable sur wikipedia, ...)
+  var denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+  if(denom != 0) {
+    var ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+    if((ua >= 0) && (ua <= 1)) {
+      var ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+      if((ub >= 0) && (ub <= 1)) {
+
+        //console.log("(" + x1 + ", " + y1 +") (" + x2 + ", " + y2 +") (" + x3 + ", " + y3 +") (" + x4 + ", " + y4 +")");
+        var x = x1 + (ua * (x2-x1));
+        var y = y1 + (ua * (y2-y1));
+
+        if(ua == 0) {
+          var o = Math.abs(((y4-y3) * x2) - ((x4 - x3) * y2) + (x4*y3) - (y4*x3)) / Math.sqrt(Math.pow((y4-y3), 2) + Math.pow((x4-x3), 2));
+          var h = Math.sqrt(Math.pow((y-y2), 2) + Math.pow((x-x2), 2));
+        } else {
+          var o = Math.abs(((y4-y3) * x1) - ((x4 - x3) * y1) + (x4*y3) - (y4*x3)) / Math.sqrt(Math.pow((y4-y3), 2) + Math.pow((x4-x3), 2));
+          var h = Math.sqrt(Math.pow((y-y1), 2) + Math.pow((x-x1), 2));
+        }
+
+        var angle = Math.asin(o/h) * 180 / Math.PI;
+
+        var d1 = Math.sqrt(Math.pow(x3-x1, 2) + Math.pow(y3-y1, 2));
+        var d2 = Math.sqrt(Math.pow(x3-x, 2) + Math.pow(y3-y, 2));
+
+        if(d1 > d2) {
+          angle = 180 - angle;
+        }
+
+        if(angle > 180) {
+          console.log("FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK");
+        }
+
+        //console.log("intercept angle: " + angle);
+
+        return { x: x, y: y, angle: angle};
+      }
+    }
+  }
+  return null;
+} // fin intercept
+
+
+
 ///////////////////////////
 //         CHAT          //
 ///////////////////////////
@@ -184,9 +232,8 @@ var Player = function(initPack) {
   this.id = initPack.id;
   this.localId = initPack.localId;
   this.username = initPack.username;
-  this.rotation = initPack.rotation
+  this.rotation = initPack.rotation;
   this.angle = initPack.angle;
-  console.log(this.localId + " " + this.rotation + " " + this.angle);
 
   if(!ROTATED && this.id == ID) {
     ctx.rotate(-this.angle / 180 * Math.PI + (Math.PI/2));
@@ -206,10 +253,17 @@ var Player = function(initPack) {
   this.color = initPack.color;
   this.score = initPack.score;
 
+  var h5 = document.createElement("h5");
+  h5.id = "player" + this.id;
+  h5.innerHTML = this.username + "   " + this.score;
+  leaderboard.appendChild(h5);
+
   Player.list[this.id] = this;
+  Player.idList[this.localId] = this.id;
 }
 
 Player.list = {};
+Player.idList = {};
 
 var MAP = {
   walls: {},
@@ -221,7 +275,123 @@ var Ball = function(initPack) {
   this.radius = initPack.radius;
   this.x = initPack.x;
   this.y = initPack.y;
+  this.speed = initPack.speed;
+  this.accel = initPack.accel;
+  this.spdX = initPack.spdX;
+  this.spdY = initPack.spdY;
   this.color = initPack.color;
+
+  this.update = function() {
+    var newPos = this.accelerate();
+    var item, foundIntercept, goal, rotation, id;
+    var isPlayer = false;
+    foundIntercept = this.findIntercept(newPos, false);
+    if(!foundIntercept) {
+      goal = this.findGoal(newPos);
+    }
+
+    this.speed = newPos.speed;
+    this.spdX = newPos.spdX;
+    this.spdY = newPos.spdY;
+
+    if(goal) {
+      // if(forAI) {
+      //   return {id: goal.id, x: goal.x, y: goal.y};
+      // }
+      this.reset();
+    }
+
+    if(foundIntercept) {
+      this.changeCours(foundIntercept);
+    }
+
+    this.x += this.spdX;
+    this.y += this.spdY;
+
+    //this.setSides();
+  }
+
+  this.findIntercept = function(newPos, debug) {
+    var foundIntercept;
+    for(var i in Player.list) {
+      if(!foundIntercept) {
+        p = Player.list[i];
+        foundIntercept = intercept(this.x, this.y, newPos.dx, newPos.dy, p.x1, p.y1, p.x2, p.y2, debug);
+        if(foundIntercept) {
+          foundIntercept.rotation = p.rotation;
+          foundIntercept.isPlayer = true;
+          foundIntercept.id = p.id;
+        }
+      }
+    }
+    if(!foundIntercept) {
+      for(var i in MAP.walls) {
+        if(!foundIntercept) {
+          w = MAP.walls[i];
+          //foundIntercept = this.ballIntercept(w, newPos.dx, newPos.dy, true);
+          foundIntercept = intercept(this.x, this.y, newPos.x, newPos.y, w.x1, w.y1, w.x2, w.y2, debug);
+          if(foundIntercept) {
+            foundIntercept.rotation = w.rotation;
+          }
+        }
+      }
+    }
+    return foundIntercept;
+  }
+
+  this.changeCours = function(foundIntercept) {
+    this.x = foundIntercept.x;
+    this.y = foundIntercept.y;
+    if(foundIntercept.isPlayer) {
+      var p = Player.list[foundIntercept.id];
+      var d = Math.sqrt(Math.pow(foundIntercept.x-p.x, 2) + Math.pow(foundIntercept.y-p.y, 2));
+      var d2 = Math.sqrt(Math.pow(foundIntercept.x-p.x1, 2) + Math.pow(foundIntercept.y-p.y1, 2));
+      var perc = d/p.width;
+      var angle = 60 * perc;
+      if(d2 < p.width) {
+        angle *= -1;
+      }
+      this.spdX = Math.cos((90 + angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+      this.spdY = Math.sin((90 + angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+    } else {
+      this.spdX = Math.cos((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+      this.spdY = Math.sin((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+    }
+  }
+
+  this.findGoal = function(newPos) {
+    var goal
+    for(var i in MAP.goals) {
+      if(!goal) {
+        g = MAP.goals[i];
+        goal = intercept(this.x, this.y, newPos.x, newPos.y, g.x1, g.y1, g.x2, g.y2, true);
+        if(goal) {
+          goal.id = MAP.goals[i].localId;
+        }
+      }
+    }
+    return goal;
+  }
+
+  this.reset = function() {
+    this.x = 0;
+    this.y = 0;
+    this.speed = 6;
+    //var a = random(0, 360);
+    // this.spdX = Math.cos(a / 180 * Math.PI) * this.speed;
+    // this.spdY = Math.sin(a / 180 * Math.PI) * this.speed;
+    //this.setSides();
+  }
+
+  this.accelerate = function() {
+    var accel = 1 + (this.accel * 1/60 * 1/60 * 0.5);
+    var speed = this.speed * accel;
+    var spdX2 = this.spdX * accel;
+    var spdY2 = this.spdY * accel;
+    var x2  = this.x + spdX2;
+    var y2  = this.y + spdY2;
+    return { dx: (x2-this.x), dy: (y2-this.y), x: x2, y: y2, speed: speed, spdX: spdX2, spdY: spdY2 };
+  }
 
   Ball.list[this.id] = this;
 }
@@ -314,6 +484,9 @@ function animloop() {
 }
 
 function gameLoop() {
+  for(var i in Ball.list) {
+    Ball.list[i].update();
+  }
   ctx.clearRect(-600, -600, 1200, 1200);
   drawWalls();
   drawGoals();

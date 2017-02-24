@@ -72,10 +72,7 @@ getEquation = function(x1, y1, x2, y2) {
   return { a: a, b: b};
 }
 
-
-bounce = function(ball, line, point) {
-
-}
+var NAMES = ["ninja", "chair", "pancake", "statue", "unicorn", "rainbows", "laser", "senor", "bunny", "captain", "nibblets", "cupcake", "carrot", "gnomes", "glitter", "potato", "salad", "toejam", "curtains", "beets", "toilet", "exorcism", "stick figures", "mermaid eggs", "sea barnacles", "dragons", "jellybeans", "snakes", "dolls", "bushes", "cookies", "apples", "ice cream", "ukulele", "kazoo", "banjo", "opera singer", "circus", "trampoline", "carousel", "carnival", "locomotive", "hot air balloon", "praying mantis", "animator", "artisan", "artist", "colorist", "inker", "coppersmith", "director", "designer", "flatter", "stylist", "leadman", "limner", "make-up artist", "model", "musician", "penciller", "producer", "scenographer", "set decorator", "silversmith", "teacher", "auto mechanic", "beader", "bobbin boy", "clerk of the chapel", "filling station attendant", "foreman", "maintenance engineering", "mechanic", "miller", "moldmaker", "panel beater", "patternmaker", "plant operator", "plumber", "sawfiler", "shop foreman", "soaper", "stationary engineer", "wheelwright", "woodworkers"];
 
 
 
@@ -233,7 +230,8 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
   this.createAI = function() { // Fonction pour la creation d'un AI
     var aiSocket = { id: random(1, 1000000000) }; // Attribution d'un id
-    var ai = new Player(aiSocket, "AI", true); // Creation d'un joueur AI
+    var name = NAMES[random(0, NAMES.length)];
+    var ai = new Player(aiSocket, name, true); // Creation d'un joueur AI
     Player.list[ai.id] = ai; // Ajout au liste des joueurs
     var i = 1;
     var joined = false;
@@ -294,6 +292,10 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       radius: ball.radius,
       x: ball.x,
       y: ball.y,
+      speed: ball.speed,
+      accel: ball.accel,
+      spdX: ball.spdX,
+      spdY: ball.spdY,
       color: ball.color
     });
   }
@@ -518,7 +520,11 @@ var Wall = function(angle1, angle2) {
 
   //this.rotation = 180 + ((180 - Math.abs(this.angle1 - this.angle2)) / 2) - this.angle1;
 
-  this.rotation = this.angle2 + ((180 - Math.abs(this.angle1 - this.angle2)) / 2);
+  if(this.angle1 < this.angle2) {
+    this.rotation = this.angle2 + ((180 - Math.abs(this.angle1 - this.angle2)) / 2);
+  } else {
+    this.rotation = 360 + this.angle2 + ((180 - Math.abs(this.angle1 - this.angle2 - 360)) / 2);
+  }
 
   console.log("ROTATION: " + this.rotation);
 
@@ -559,10 +565,10 @@ var Goal = function(angle1, angle2, localId, pos) {
 
   this.length = Math.sqrt(Math.pow(this.x1 - this.x2, 2) + Math.pow(this.y1 - this.y2, 2));
 
-  if(this.angle2 != 0) {
+  if(this.angle1 < this.angle2) {
     this.rotation = this.angle2 + ((180 - Math.abs(this.angle1 - this.angle2)) / 2);
   } else {
-    this.rotation = 360 + ((180 - Math.abs(this.angle1 - 360)) / 2);
+    this.rotation = 360 + this.angle2 + ((180 - Math.abs(this.angle1 - this.angle2 - 360)) / 2);
   }
 }
 
@@ -609,7 +615,7 @@ var Ball = function(game) {
     for(var i in players) {
       if(!foundIntercept) {
         p = players[i];
-        foundIntercept = intercept(this.x, this.y, newPos.dx, newPos.dy, p.x1, p.y1, p.x2, p.y2, debug);
+        foundIntercept = intercept(this.x, this.y, newPos.dx, newPos.dy, p.x1, p.y1, p.x2, p.y2, false);
         if(foundIntercept) {
           foundIntercept.rotation = p.rotation;
           foundIntercept.isPlayer = true;
@@ -622,8 +628,11 @@ var Ball = function(game) {
         if(!foundIntercept) {
           w = walls[i];
           //foundIntercept = this.ballIntercept(w, newPos.dx, newPos.dy, true);
-          foundIntercept = intercept(this.x, this.y, newPos.x, newPos.y, w.x1, w.y1, w.x2, w.y2, debug);
+          foundIntercept = intercept(this.x, this.y, newPos.x, newPos.y, w.x1, w.y1, w.x2, w.y2, false);
           if(foundIntercept) {
+            if(debug) {
+              console.log("TOUCHED A WALL");
+            }
             foundIntercept.rotation = w.rotation;
           }
         }
@@ -664,13 +673,15 @@ var Ball = function(game) {
       this.spdX = Math.cos((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
       this.spdY = Math.sin((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
     }
+    this.x += this.spdX * 0.1;
+    this.y += this.spdY * 0.1;
   }
 
   this.update = function(players, walls, goals, forAI) {
     var newPos = this.accelerate();
     var item, foundIntercept, goal, rotation, id;
     var isPlayer = false;
-    foundIntercept = this.findIntercept(newPos, players, walls, false);
+    foundIntercept = this.findIntercept(newPos, players, walls, !forAI);
     if(!foundIntercept) {
       goal = this.findGoal(newPos, goals);
     }
@@ -700,18 +711,19 @@ var Ball = function(game) {
         x: x,
         y: y
       }
-      var secondIntercept = this.findIntercept(newPos, players, walls, false);
-      var secondGoal;
+      var secondIntercept, secondGoal;
+      secondIntercept = this.findIntercept(pos, players, walls, false);
       if(!secondIntercept) {
-        secondGoal = this.findGoal(newPos, goals);
+        secondGoal = this.findGoal(pos, goals);
       }
       if(secondGoal) {
         if(forAI) {
-          return {id: goal.id, x: goal.x, y: goal.y};
+          return {id: secondGoal.id, x: secondGoal.x, y: secondGoal.y};
         }
         this.reset();
       }
       if(secondIntercept) {
+        console.log(secondIntercept);
         this.changeCours(secondIntercept);
       }
     }
@@ -726,7 +738,7 @@ var Ball = function(game) {
     }
   }
 
-  this.reset = function(id) {
+  this.reset = function() {
     this.x = 0;
     this.y = 0;
     this.speed = 6;
