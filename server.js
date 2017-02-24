@@ -331,8 +331,16 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       //var interception = intercept(b.x, b.y, newPosition.x, newPosition.y, player.goal.x1, player.goal.y1, player.goal.x2, player.goal.y2, false);
       var interception;
       var i = 0;
-      while(!interception) {
+      while(!interception && i < 1000) {
         interception = b.update(this.players, this.map.walls, this.map.goals, true);
+        i++
+      }
+      for(var i in this.players) {
+        var p = this.players[i];
+        if(p.isAI) {
+          var d = random(0, p.goal.length);
+          p.destination = d;
+        }
       }
       if(interception) {
         var g = this.map.goals[interception.id];
@@ -572,7 +580,7 @@ var Ball = function(game) {
   this.radius = 5; // Le rayon du ball
   this.x = 0;
   this.y = 0;
-  this.speed = 4;
+  this.speed = 6;
   this.accel = 1;
   var a = random(0, 360);
   this.spdX = Math.cos(a / 180 * Math.PI) * this.speed;
@@ -596,18 +604,16 @@ var Ball = function(game) {
   //   this.targets.goals[i] = game.map.goals[i];
   // }
 
-  this.update = function(players, walls, goals, forAI) {
-    var newPos = this.accelerate();
-    var item, foundIntercept, goal, rotation, id;
-    var isPlayer = false;
+  this.findIntercept = function(newPos, players, walls, debug) {
+    var foundIntercept;
     for(var i in players) {
       if(!foundIntercept) {
         p = players[i];
-        foundIntercept = intercept(this.x, this.y, newPos.dx, newPos.dy, p.x1, p.y1, p.x2, p.y2, false);
+        foundIntercept = intercept(this.x, this.y, newPos.dx, newPos.dy, p.x1, p.y1, p.x2, p.y2, debug);
         if(foundIntercept) {
-          rotation = p.rotation;
-          isPlayer = true;
-          id = p.localId;
+          foundIntercept.rotation = p.rotation;
+          foundIntercept.isPlayer = true;
+          foundIntercept.id = p.localId;
         }
       }
     }
@@ -616,31 +622,66 @@ var Ball = function(game) {
         if(!foundIntercept) {
           w = walls[i];
           //foundIntercept = this.ballIntercept(w, newPos.dx, newPos.dy, true);
-          foundIntercept = intercept(this.x, this.y, newPos.x, newPos.y, w.x1, w.y1, w.x2, w.y2, false);
+          foundIntercept = intercept(this.x, this.y, newPos.x, newPos.y, w.x1, w.y1, w.x2, w.y2, debug);
           if(foundIntercept) {
-            rotation = w.rotation;
+            foundIntercept.rotation = w.rotation;
           }
         }
       }
     }
-    if(!foundIntercept) {
-      for(var i in goals) {
-        if(!goal) {
-          g = goals[i];
-          goal = intercept(this.x, this.y, newPos.x, newPos.y, g.x1, g.y1, g.x2, g.y2, true);
-          if(goal) {
-            id = goals[i].localId;
-          }
+    return foundIntercept;
+  }
+
+  this.findGoal = function(newPos, goals) {
+    var goal
+    for(var i in goals) {
+      if(!goal) {
+        g = goals[i];
+        goal = intercept(this.x, this.y, newPos.x, newPos.y, g.x1, g.y1, g.x2, g.y2, true);
+        if(goal) {
+          goal.id = goals[i].localId;
         }
       }
+    }
+    return goal;
+  }
+
+  this.changeCours = function(foundIntercept) {
+    this.x = foundIntercept.x;
+    this.y = foundIntercept.y;
+    if(foundIntercept.isPlayer) {
+      var p = gameServer.rooms[this.game].players[foundIntercept.id];
+      var d = Math.sqrt(Math.pow(foundIntercept.x-p.x, 2) + Math.pow(foundIntercept.y-p.y, 2));
+      var d2 = Math.sqrt(Math.pow(foundIntercept.x-p.x1, 2) + Math.pow(foundIntercept.y-p.y1, 2));
+      var perc = d/p.width;
+      var angle = 60 * perc;
+      if(d2 < p.width) {
+        angle *= -1;
+      }
+      this.spdX = Math.cos((90 + angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+      this.spdY = Math.sin((90 + angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+    } else {
+      this.spdX = Math.cos((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+      this.spdY = Math.sin((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+    }
+  }
+
+  this.update = function(players, walls, goals, forAI) {
+    var newPos = this.accelerate();
+    var item, foundIntercept, goal, rotation, id;
+    var isPlayer = false;
+    foundIntercept = this.findIntercept(newPos, players, walls, false);
+    if(!foundIntercept) {
+      goal = this.findGoal(newPos, goals);
     }
 
+    this.speed = newPos.speed;
     this.spdX = newPos.spdX;
     this.spdY = newPos.spdY;
 
     if(goal) {
       if(forAI) {
-        return {id: id, x: goal.x, y: goal.y};
+        return {id: goal.id, x: goal.x, y: goal.y};
       }
       this.reset();
       //console.log(goal);
@@ -652,22 +693,26 @@ var Ball = function(game) {
     }
 
     if(foundIntercept) {
-      this.x = foundIntercept.x;
-      this.y = foundIntercept.y;
-      if(isPlayer) {
-        var p = gameServer.rooms[this.game].players[id];
-        var d = Math.sqrt(Math.pow(foundIntercept.x-p.x, 2) + Math.pow(foundIntercept.y-p.y, 2));
-        var d2 = Math.sqrt(Math.pow(foundIntercept.x-p.x1, 2) + Math.pow(foundIntercept.y-p.y1, 2));
-        var perc = d/p.width;
-        var angle = 45 * perc;
-        if(d2 < p.width) {
-          angle *= -1;
+      this.changeCours(foundIntercept);
+      var x = this.x + this.spdX;
+      var y = this.y + this.spdY;
+      var pos = {
+        x: x,
+        y: y
+      }
+      var secondIntercept = this.findIntercept(newPos, players, walls, false);
+      var secondGoal;
+      if(!secondIntercept) {
+        secondGoal = this.findGoal(newPos, goals);
+      }
+      if(secondGoal) {
+        if(forAI) {
+          return {id: goal.id, x: goal.x, y: goal.y};
         }
-        this.spdX = Math.cos((90 + angle + rotation) / 180 * Math.PI) * this.speed;
-        this.spdY = Math.sin((90 + angle + rotation) / 180 * Math.PI) * this.speed;
-      } else {
-        this.spdX = Math.cos((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
-        this.spdY = Math.sin((foundIntercept.angle + rotation) / 180 * Math.PI) * this.speed;
+        this.reset();
+      }
+      if(secondIntercept) {
+        this.changeCours(secondIntercept);
       }
     }
 
@@ -676,7 +721,7 @@ var Ball = function(game) {
 
     this.setSides();
 
-    if(!forAI && isPlayer) {
+    if(foundIntercept && !forAI && foundIntercept.isPlayer) {
       gameServer.rooms[this.game].ai(this);
     }
   }
@@ -684,7 +729,7 @@ var Ball = function(game) {
   this.reset = function(id) {
     this.x = 0;
     this.y = 0;
-    this.speed = 4;
+    this.speed = 6;
     var a = random(0, 360);
     this.spdX = Math.cos(a / 180 * Math.PI) * this.speed;
     this.spdY = Math.sin(a / 180 * Math.PI) * this.speed;
