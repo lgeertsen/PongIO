@@ -7,37 +7,214 @@ html, body {
 	overflow: hidden;
 }
 
+#startMenuWrapper,
+#particles-js {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+#particles-js {
+	position: absolute;
+}
+
+#startMenuWrapper h2 {
+	padding: 0;
+	text-align: center;
+	font-weight: bold;
+}
+
+#start {
+	height: 380px;
+}
+
 #gameWrapper {
 	height: 800px;
 }
 
 canvas {
 	width: 100%;
-	max-width: 800px;
   margin: 0;
   padding: 0;
 }
 
-#startMenu {
-	margin:auto;
-	margin-top:100px;
-	width: 350px;
-	padding: 20px;
-	border-radius: 5px 5px 5px 5px;
-	-moz-border-radius: 5px 5px 5px 5px;
-	-webkit-border-radius: 5px 5px 5px 5px;
-	background-color: #fff;
-	box-sizing: border-box;
+.card {
+  height: auto;
+  min-height: 250px;
 }
 
-#startMenu p {
-	padding: 0;
-	text-align:center;
-	font-size: x-large;
-	font-weight: bold;
+.card .card-content {
+  width: 100%;
 }
 
-#playerNameInput {
+.color-circle {
+	position: absolute;
+	right: 10px;
+	top: 80px;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 1px 5px 0 rgba(0,0,0,0.12),0 3px 1px -2px rgba(0,0,0,0.2);
+	z-index: 1;
+}
+
+.activator {
+  cursor: pointer;
+}
+
+.color-list {
+  padding-left: 30px;
+  margin: 0;
+}
+
+.color-list li {
+  display: inline-block;
+}
+
+[type="radio"]:not(:checked)+label, [type="radio"]:checked+label {
+  padding-left: 55px;
+  height: 35px;
+}
+
+[type="radio"]:hover+label:before, [type="radio"]:checked+label:before {
+  box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14),0 1px 10px 0 rgba(0,0,0,0.12),0 2px 4px -1px rgba(0,0,0,0.3);
+}
+
+[type="radio"]+label:before, [type="radio"]+label:after {
+  width: 30px;
+  height: 30px;
+}
+
+[type="radio"].red:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #f44336;
+}
+
+[type="radio"].red:checked+label:after, [type="radio"].red:not(:checked)+label:before, [type="radio"].red:not(:checked)+label:after {
+  border: 2px solid #f44336;
+}
+
+[type="radio"].pink:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #e91e63;
+}
+
+[type="radio"].pink:checked+label:after, [type="radio"].pink:not(:checked)+label:before, [type="radio"].pink:not(:checked)+label:after {
+  border: 2px solid #e91e63;
+}
+
+[type="radio"].purple:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #9c27b0;
+}
+
+[type="radio"].purple:checked+label:after, [type="radio"].purple:not(:checked)+label:before, [type="radio"].purple:not(:checked)+label:after {
+  border: 2px solid #9c27b0;
+}
+
+[type="radio"].deep-purple:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #673ab7;
+}
+
+[type="radio"].deep-purple:checked+label:after, [type="radio"].deep-purple:not(:checked)+label:before, [type="radio"].deep-purple:not(:checked)+label:after {
+  border: 2px solid #673ab7;
+}
+
+[type="radio"].indigo:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #3f51b5;
+}
+
+[type="radio"].indigo:checked+label:after, [type="radio"].indigo:not(:checked)+label:before, [type="radio"].indigo:not(:checked)+label:after {
+  border: 2px solid #3f51b5;
+}
+
+[type="radio"].blue:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #2196f3;
+}
+
+[type="radio"].blue:checked+label:after, [type="radio"].blue:not(:checked)+label:before, [type="radio"].blue:not(:checked)+label:after {
+  border: 2px solid #2196f3;
+}
+
+[type="radio"].light-blue:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #03a9f4;
+}
+
+[type="radio"].light-blue:checked+label:after, [type="radio"].light-blue:not(:checked)+label:before, [type="radio"].light-blue:not(:checked)+label:after {
+  border: 2px solid #03a9f4;
+}
+
+[type="radio"].cyan:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #00bcd4;
+}
+
+[type="radio"].cyan:checked+label:after, [type="radio"].cyan:not(:checked)+label:before, [type="radio"].cyan:not(:checked)+label:after {
+  border: 2px solid #00bcd4;
+}
+
+[type="radio"].teal:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #009688;
+}
+
+[type="radio"].teal:checked+label:after, [type="radio"].teal:not(:checked)+label:before, [type="radio"].teal:not(:checked)+label:after {
+  border: 2px solid #009688;
+}
+
+[type="radio"].green:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #4caf50;
+}
+
+[type="radio"].green:checked+label:after, [type="radio"].green:not(:checked)+label:before, [type="radio"].green:not(:checked)+label:after {
+  border: 2px solid #4caf50;
+}
+
+[type="radio"].light-green:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #8bc34a;
+}
+
+[type="radio"].light-green:checked+label:after, [type="radio"].light-green:not(:checked)+label:before, [type="radio"].light-green:not(:checked)+label:after {
+  border: 2px solid #8bc34a;
+}
+
+[type="radio"].lime:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #cddc39;
+}
+
+[type="radio"].lime:checked+label:after, [type="radio"].lime:not(:checked)+label:before, [type="radio"].lime:not(:checked)+label:after {
+  border: 2px solid #cddc39;
+}
+
+[type="radio"].yellow:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #ffeb3b;
+}
+
+[type="radio"].yellow:checked+label:after, [type="radio"].yellow:not(:checked)+label:before, [type="radio"].yellow:not(:checked)+label:after {
+  border: 2px solid #ffeb3b;
+}
+
+[type="radio"].amber:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #ffc107;
+}
+
+[type="radio"].amber:checked+label:after, [type="radio"].amber:not(:checked)+label:before, [type="radio"].amber:not(:checked)+label:after {
+  border: 2px solid #ffc107;
+}
+
+[type="radio"].orange:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #ff9800;
+}
+
+[type="radio"].orange:checked+label:after, [type="radio"].orange:not(:checked)+label:before, [type="radio"].orange:not(:checked)+label:after {
+  border: 2px solid #ff9800;
+}
+
+[type="radio"].deep-orange:checked+label:after, [type="radio"].with-gap:checked+label:after {
+  background-color: #ff5722;
+}
+
+[type="radio"].deep-orange:checked+label:after, [type="radio"].deep-orange:not(:checked)+label:before, [type="radio"].deep-orange:not(:checked)+label:after {
+  border: 2px solid #ff5722;
+}
+
+/*#playerNameInput {
 	width: 100%;
 	text-align: center;
 	padding: 10px;
@@ -49,12 +226,12 @@ canvas {
 	-webkit-border-radius: 5px 5px 5px 5px;
 	margin-bottom: 10px;
 	outline: none;
-}
+}*/
 
-#playerNameInput:focus, #playerNameInput.focus {
+/*#playerNameInput:focus, #playerNameInput.focus {
 	border: solid 1px #CCCCCC;
 	box-shadow: 0 0 3px 1px #DDDDDD;
-}
+}*/
 
 #startButton {
 	position: relative;
@@ -98,8 +275,7 @@ canvas {
 }
 
 #startMenu #input-error {
-  color : red;
-  display: none;
+  color : #fff;
   font-size : 12px;
 }
 
@@ -111,4 +287,56 @@ canvas {
 	text-align: center;
 	color: #fff;
 	background-color: #333;
+}
+
+#chat {
+	position: absolute;
+	left: 0;
+	bottom: 20px;
+	width: 300px;
+	height: 500px;
+	border: 1px solid black;
+	text-align: center;
+}
+
+#chat form {
+	position: absolute;
+	bottom: 0;
+	width: 100%
+}
+
+#chat input {
+	width: 100%;
+}
+
+#chat input:focus {
+	border-bottom: 2px solid #55D88B;
+}
+
+.toast {
+  border-radius: 2px;
+  top: 0;
+  width: auto;
+  clear: both;
+  margin-top: 10px;
+  position: relative;
+  max-width: 300px;
+  height: auto;
+  min-height: 48px;
+  line-height: 1.5em;
+  word-break: break-all;
+  background-color: transparent;
+  padding: 10px 25px;
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: #555;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-justify-content: space-between;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
 }

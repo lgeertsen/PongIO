@@ -8,7 +8,97 @@
 </head>
 <body>
   <div id="startMenuWrapper">
-    <div id="startMenu">
+    <div id="particles-js"></div>
+    <div class="container">
+      <div class="row">
+        <div id="start" class="col s6 m4 offset-m4">
+          <h2>PONGIO</h2>
+          <div class="card valign-wrapper">
+            <div id="startMenu" class="card-content valign">
+              <form id="start-form">
+                <div class="card-title activator color-circle" id="circle"></div>
+                <h6>Choose your color</h6>
+                <div class="input-field">
+                  <input tabindex="0" autofocus placeholder="Enter your name here" id="playerNameInput" autocomplete="off" type="text">
+                  <b id="input-error">Nick name must be alphanumeric characters only!</b>
+                </div>
+                <button id="startButton" type="submit">Play</button>
+              </form>
+            </div>
+            <div class="card-reveal">
+              <span class="card-title grey-text text-darken-4">Color<i class="material-icons right">close</i></span>
+              <ul class="color-list">
+                <li>
+                  <input name="colors" type="radio" id="red1" class="red" onclick="changePlayerColor(1)" />
+                  <label for="red1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="pink1" class="pink" onclick="changePlayerColor(2)" />
+                  <label for="pink1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="purple1" class="purple" onclick="changePlayerColor(3)" />
+                  <label for="purple1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="deep-purple1" class="deep-purple" onclick="changePlayerColor(4)" />
+                  <label for="deep-purple1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="indigo1" class="indigo" onclick="changePlayerColor(5)" />
+                  <label for="indigo1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="blue1" class="blue" onclick="changePlayerColor(6)" />
+                  <label for="blue1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="light-blue1" class="light-blue" onclick="changePlayerColor(7)" />
+                  <label for="light-blue1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="cyan1" class="cyan" onclick="changePlayerColor(8)" />
+                  <label for="cyan1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="teal1" class="teal" onclick="changePlayerColor(9)" />
+                  <label for="teal1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="green1" class="green" onclick="changePlayerColor(10)" />
+                  <label for="green1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="light-green1" class="light-green" onclick="changePlayerColor(11)" />
+                  <label for="light-green1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="lime1" class="lime" onclick="changePlayerColor(12)" />
+                  <label for="lime1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="yellow1" class="yellow" onclick="changePlayerColor(13)" />
+                  <label for="yellow1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="amber1" class="amber" onclick="changePlayerColor(14)" />
+                  <label for="amber1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="orange1" class="orange" onclick="changePlayerColor(15)" />
+                  <label for="orange1"></label>
+                </li>
+                <li>
+                  <input name="colors" type="radio" id="deep-orange1" class="deep-orange" onclick="changePlayerColor(16)" />
+                  <label for="deep-orange1"></label>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- <div id="startMenu">
       <p>PONG IO</p>
       <form id="start-form">
         <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="playerNameInput" autocomplete="off"/>
@@ -16,7 +106,7 @@
         <br />
         <button id="startButton" type="submit">Play</button>
       </form>
-    </div>
+    </div> -->
   </div>
   <div id="gameAreaWrapper" style="display: none;">
     <div id="gameWrapper">
@@ -26,15 +116,15 @@
     </div>
     <div id="chat">
       <div id="chat-text"></div>
-
-        <form id="chat-form">
-          <input id="chat-input" type="text" autocomplete="off"/>
-        </form>
-      </div>
+      <form id="chat-form">
+        <input id="chat-input" type="text" autocomplete="off"/>
+        <button class="btn red" type="submit">SEND</button>
+      </form>
     </div>
   </div>
   <script src="/client/js/jquery.js"></script>
   <script src="/client/js/materialize.js"></script>
+  <!-- <script src="/client/js/particles.js"></script> -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="/client/js/app.js"></script>
 </body>
