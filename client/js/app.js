@@ -300,6 +300,12 @@ var onSocket = function(socket) {
         if(pack.y !== undefined) {
           b.y = pack.y;
         }
+        if(pack.spdX !== undefined) {
+          b.spdX = pack.spdX;
+        }
+        if(pack.spdY !== undefined) {
+          b.spdY = pack.spdY;
+        }
         if(pack.color !== undefined) {
           b.color = pack.color;
         }

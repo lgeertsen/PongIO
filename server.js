@@ -449,6 +449,8 @@ var Game = function(player) { // Le premier joueur est passer à la création du
           id: ball.id,
           x: ball.x,
           y: ball.y,
+          spdX: ball.spdX,
+          spdY: ball.spdY,
           color: ball.color
         });
         ball.color = undefined;
@@ -456,6 +458,8 @@ var Game = function(player) { // Le premier joueur est passer à la création du
         pack.push({
           id: ball.id,
           x: ball.x,
+          spdX: ball.spdX,
+          spdY: ball.spdY,
           y: ball.y
         });
       }
