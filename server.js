@@ -444,12 +444,21 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       var ball = this.balls[i];
 
       ball.update(this.players, this.map.walls, this.map.goals, false); // Mettre à jour le ball
-
-      pack.push({
-        id: ball.id,
-        x: ball.x,
-        y: ball.y
-      });
+      if(ball.color !== undefined) {
+        pack.push({
+          id: ball.id,
+          x: ball.x,
+          y: ball.y,
+          color: ball.color
+        });
+        ball.color = undefined;
+      } else {
+        pack.push({
+          id: ball.id,
+          x: ball.x,
+          y: ball.y
+        });
+      }
     }
     return pack;
   }
@@ -643,7 +652,7 @@ var Ball = function(game) {
   this.x = 0;
   this.y = 0;
   this.speed = 6;
-  this.accel = 2;
+  this.accel = 1;
   var a = random(0, 360);
   this.spdX = Math.cos(a / 180 * Math.PI) * this.speed;
   this.spdY = Math.sin(a / 180 * Math.PI) * this.speed;
@@ -727,6 +736,7 @@ var Ball = function(game) {
       this.spdX = Math.cos((90 + angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
       this.spdY = Math.sin((90 + angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
       this.player = foundIntercept.id;
+      this.color = gameServer.rooms[this.game].players[foundIntercept.id].color;
     } else {
       this.spdX = Math.cos((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
       this.spdY = Math.sin((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
@@ -805,6 +815,7 @@ var Ball = function(game) {
     this.y = 0;
     this.speed = 6;
     this.player = 0;
+    this.color = '#000';
     var a = random(0, 360);
     this.spdX = Math.cos(a / 180 * Math.PI) * this.speed;
     this.spdY = Math.sin(a / 180 * Math.PI) * this.speed;

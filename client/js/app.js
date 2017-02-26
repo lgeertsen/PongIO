@@ -300,6 +300,9 @@ var onSocket = function(socket) {
         if(pack.y !== undefined) {
           b.y = pack.y;
         }
+        if(pack.color !== undefined) {
+          b.color = pack.color;
+        }
       }
     }
   });
@@ -603,6 +606,7 @@ var Ball = function(initPack) {
     this.x = 0;
     this.y = 0;
     this.speed = 6;
+    this.color = "#000";
     //var a = random(0, 360);
     // this.spdX = Math.cos(a / 180 * Math.PI) * this.speed;
     // this.spdY = Math.sin(a / 180 * Math.PI) * this.speed;
@@ -643,7 +647,6 @@ var drawWalls = function() {
     ctx.closePath();
     ctx.stroke();
   }
-  ctx.fillRect(0, 0, 10, 10);
 }
 
 var drawGoals = function() {
@@ -694,6 +697,29 @@ var drawBalls = function() {
   }
 }
 
+var drawLines = function(p1, p2){
+  var dx = Math.abs(p1.x - p2.x);
+  var dy = Math.abs(p1.y - p2.y);
+  var dist = Math.sqrt(dx*dx + dy*dy);
+  /* draw a line between p1 and p2 if the distance between them is under the config distance */
+  if(dist <= 300){
+    var opacity_line = 1 - (dist / 300);
+    if(opacity_line > 0){
+      /* style */
+      //ctx.strokeStyle = "#777";
+      ctx.strokeStyle = 'rgba(111,111,111,' + opacity_line + ')';
+      ctx.lineWidth = 1;
+      //pJS.canvas.ctx.lineCap = 'round'; /* performance issue */
+      /* path */
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+      ctx.closePath();
+    }
+  }
+}
+
 window.requestAnimFrame = (function() {
     return  window.requestAnimationFrame       ||
             window.webkitRequestAnimationFrame ||
@@ -721,12 +747,29 @@ function gameLoop() {
   drawGoals();
   drawPlayers();
   drawBalls();
+  for(var i in Ball.list) {
+    var p1 = Ball.list[i];
+    for(var j in Ball.list) {
+      if(j != i) {
+        var p2 = Ball.list[j];
+        drawLines(p1, p2);
+      }
+    }
+    for(var j in Player.list) {
+      var p2 = Player.list[j];
+      drawLines(p1, p2);
+    }
+  }
 }
 
 document.onkeydown = function(event) {
   if(event.keyCode === 81) {
+    Player.list[ID].moveLeft = true;
+    Player.list[ID].moveRight = false;
     socket.emit('keyPress', { inputId: 'left', state: true});
   } else if(event.keyCode === 83) {
+    Player.list[ID].moveLeft = false;
+    Player.list[ID].moveRight = true;
     socket.emit('keyPress', { inputId: 'right', state: true});
   }
 
@@ -744,8 +787,12 @@ document.onkeydown = function(event) {
 
 document.onkeyup = function(event) {
   if(event.keyCode === 81) {
+    Player.list[ID].moveLeft = false;
+    Player.list[ID].moveRight = false;
     socket.emit('keyPress', { inputId: 'left', state: false});
   } else if(event.keyCode === 83) {
+    Player.list[ID].moveLeft = false;
+    Player.list[ID].moveRight = false;
     socket.emit('keyPress', { inputId: 'right', state: false});
   }
 
