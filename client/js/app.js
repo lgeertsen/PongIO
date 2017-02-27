@@ -18,6 +18,7 @@ var list = document.getElementsByName("colors");
 
 var ID;
 var ROTATED = false;
+var FOCUSED = false;
 var stopParticles = false;
 
 var Img = {};
@@ -252,7 +253,20 @@ var onSocket = function(socket) {
 
   socket.on('addToChat', function(data) {
     //chatText.innerHTML+= '<div>' + data + '</div>';
-    Materialize.toast(data, 4000);
+    //Materialize.toast(data, 4000);
+    var message = document.createElement('div');
+    message.innerHTML = data.msg;
+    if(data.id == ID) {
+      message.className = "message message-personal new";
+    } else {
+      message.className = "message new"
+      var avatar = document.createElement('div');
+      avatar.className = "avatar";
+      avatar.style.background = Player.list[data.id].color;
+      message.appendChild(avatar);;
+    }
+    //$('<div class="message message-personal">' + msg + '</div>').appendTo($('.mCSB_container')).addClass('new');
+    chatContent.appendChild(message);
   });
 
   socket.on('evalAnswer', function(data) {
@@ -390,18 +404,26 @@ intercept = function(x1, y1, x2, y2, x3, y3, x4, y4, debug) { // fonction pour c
 //         CHAT          //
 ///////////////////////////
 
-var chatText = document.getElementById('chat-text');
-var chatInput = document.getElementById('chat-input');
-var chatForm = document.getElementById('chat-form');
+var chatContent = document.getElementById('messages-content');
+var chatInput = document.getElementById('message-input');
+var chatForm = document.getElementById('message-form');
 
 chatForm.onsubmit = function(e) {
   e.preventDefault();
-  if(chatInput.value[0] === '/') {
-    socket.emit('evalServer', chatInput.value.slice(1));
-  } else {
-    socket.emit('sendMessage', chatInput.value);
+  sendMessage();
+}
+
+sendMessage = function() {
+  if(chatInput.value != "" && chatInput.value != "\n") {
+    console.log(chatInput.value);
+    if(chatInput.value[0] === '/') {
+      socket.emit('evalServer', chatInput.value.slice(1));
+    } else {
+      socket.emit('sendMessage', { id: ID, msg: chatInput.value });
+    }
   }
   chatInput.value = '';
+  chatInput.reset();
 }
 
 
@@ -777,6 +799,15 @@ document.onkeydown = function(event) {
     Player.list[ID].moveLeft = false;
     Player.list[ID].moveRight = true;
     socket.emit('keyPress', { inputId: 'right', state: true});
+  } else if(event.keyCode == 84) {
+    if(!FOCUSED) {
+      chatInput.focus();
+      chatInput.value = "";
+      FOCUSED = true;
+    }
+  } else if(event.keyCode == 13) {
+    //chatForm.submit();
+    sendMessage();
   }
 
   // if(event.keyCode === 68) { //d

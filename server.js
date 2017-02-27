@@ -701,7 +701,6 @@ var Ball = function(game) {
           foundIntercept = intercept(this.x, this.y, newPos.x, newPos.y, w.x1, w.y1, w.x2, w.y2, false);
           if(foundIntercept) {
             if(debug) {
-              console.log("TOUCHED A WALL");
             }
             foundIntercept.rotation = w.rotation;
           }
@@ -999,7 +998,7 @@ Player.onconnect = function(socket, data) {
     for(var i in room.players) {
       if(!room.players[i].isAI) {
         var socket = SOCKET_LIST[room.players[i].id];
-        socket.emit('addToChat', player.username + ": " + data);
+        socket.emit('addToChat', { id: data.id, msg: data.msg });
       }
     }
   });
