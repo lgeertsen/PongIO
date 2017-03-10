@@ -202,24 +202,24 @@ startParticleSystem = function() {
 }
 
 window.onload = function() {
-  startParticleSystem();
+  //startParticleSystem();
   var startForm = document.getElementById('start-form');
   var btn = document.getElementById('startButton');
   var errorText = document.getElementById('input-error');
   var input = document.getElementById('playerNameInput');
-  input.style.borderBottom = "2px solid " + color.hexValue;
-  var circle = document.getElementById('circle');
-  circle.style.background = color.hexValue;
+  //input.style.borderBottom = "2px solid " + color.hexValue;
+  // var circle = document.getElementById('circle');
+  // circle.style.background = color.hexValue;
   list[color.id-1].checked = true;
 
   startForm.onsubmit = function(e) {
     e.preventDefault();
     if(validNickname()) {
-      window.pJSDom = [];
-      var m = document.getElementById('startMenuWrapper');
-      var p = document.getElementById('particles-js');
-      m.removeChild(p);
-      stopParticles = true;
+      // window.pJSDom = [];
+      // var m = document.getElementById('startMenuWrapper');
+      // var p = document.getElementById('particles-js');
+      // m.removeChild(p);
+      // stopParticles = true;
       startGame();
     } else {
       errorText.style.color = 'red';
@@ -229,10 +229,10 @@ window.onload = function() {
 
 changePlayerColor = function(id) {
   color = COLORS[id-1];
-  var input = document.getElementById('playerNameInput');
-  input.style.borderBottom = "2px solid " + color.hexValue;
-  var circle = document.getElementById('circle');
-  circle.style.background = color.hexValue;
+  // var input = document.getElementById('playerNameInput');
+  // input.style.borderBottom = "2px solid " + color.hexValue;
+  // var circle = document.getElementById('circle');
+  // circle.style.background = color.hexValue;
 }
 
 
