@@ -14,6 +14,9 @@ c.style.marginLeft = ((screenWidth-screenHeight)/2) + "px";
 var s = document.getElementById('start');
 s.style.marginTop = ((screenHeight-500)/2) + "px";
 
+var chat = document.getElementById('chat');
+chat.style.height = screenHeight + "px";
+
 var list = document.getElementsByName("colors");
 
 var ID;

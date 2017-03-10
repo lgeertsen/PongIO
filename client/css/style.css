@@ -31,7 +31,6 @@ html, body {
 
 #menuCard {
 	width: 303px;
-	border-radius: 0;
 	/*border: 5px solid black;*/
   background-color: #eee;
 }
@@ -70,6 +69,7 @@ canvas {
   height: auto;
   min-height: 250px;
 	background: #eee;
+	border-radius: 0;
 }
 
 .card .card-content {
@@ -416,16 +416,12 @@ Chat
 --------------------*/
 #chat {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
-  width: 300px;
-  height: 80vh;
-  max-height: 500px;
+  top: 5px;
+  left: 5px;
+  width: 330px;
+  height: 500px;
   z-index: 2;
   overflow: hidden;
-  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 20px;
   display: flex;
   justify-content: space-between;
   flex-direction: column;
@@ -436,52 +432,38 @@ Chat Title
 --------------------*/
 #chat-title {
   flex: 0 1 45px;
+	margin: auto;
+	margin-top: 10px;
   position: relative;
+	width: 90%;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.2);
+  background: #f44336;
+	box-shadow: 0 4px #f44336, 0 -4px #f44336, 4px 0 #f44336, -4px 0 #f44336, 0 0 0 4px #999, 0 12px 0 4px #999, 0 20px #999, -8px 0 #999, 8px 0 #999, -8px 12px #999, 8px 12px #999, 0 -8px #999;
   color: #fff;
-  text-transform: uppercase;
-  text-align: left;
-  padding: 10px 10px 10px 50px;
+  text-align: center;
+	font-family: a15bit;
 }
-#chat-title h1, #chat-title h2 {
-  font-weight: normal;
-  font-size: 10px;
+
+#chat-title h1 {
+  font-size: 50px;
   margin: 0;
   padding: 0;
-}
-#chat-title h2 {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 8px;
-  letter-spacing: 1px;
-}
-#chat-title .avatar {
-  position: absolute;
-  z-index: 1;
-  top: 8px;
-  left: 9px;
-  border-radius: 30px;
-  width: 30px;
-  height: 30px;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  border: 2px solid rgba(255, 255, 255, 0.24);
-}
-#chat-title .avatar img {
-  width: 100%;
-  height: auto;
 }
 
 /*--------------------
 Messages
 --------------------*/
 #messages {
+	margin: auto;
+	margin-top: 35px;
+	margin-bottom: 35px;
   flex: 1 1 auto;
-  color: rgba(255, 255, 255, 0.5);
+  color: #444;
+	background: #eee;
+	box-shadow: 0 4px #eee, 0 -4px #eee, 4px 0 #eee, -4px 0 #eee, 0 0 0 4px #999, 0 12px 0 4px #999, 0 20px #999, -8px 0 #999, 8px 0 #999, -8px 12px #999, 8px 12px #999, 0 -8px #999;
   overflow: hidden;
   position: relative;
-  width: 100%;
+  width: 85%;
 }
 #messages #messages-content {
   position: absolute;
@@ -497,10 +479,10 @@ Messages
   clear: both;
   float: left;
   padding: 6px 10px 7px;
-  border-radius: 10px 10px 10px 0;
+  border-radius: 0;
   background: rgba(0, 0, 0, 0.3);
   margin: 8px 0;
-  font-size: 11px;
+  font-size: 18px;
   line-height: 1.4;
   margin-left: 35px;
   position: relative;
@@ -541,17 +523,16 @@ Messages
 }
 #messages .message.message-personal {
   float: right;
-  color: #fff;
   text-align: right;
-  background: linear-gradient(120deg, #248A52, #257287);
-  border-radius: 10px 10px 0 10px;
+  background: #f44336;
+  border-radius: 0;
 }
 #messages .message.message-personal::before {
   left: auto;
   right: 0;
   border-right: none;
   border-left: 5px solid transparent;
-  border-top: 4px solid #257287;
+  border-top: 4px solid #f44336;
   bottom: -4px;
 }
 #messages .message:last-child {
@@ -625,26 +606,29 @@ Message Box
 --------------------*/
 #message-box {
   flex: 0 1 40px;
-  width: 100%;
-  background: rgba(0, 0, 0, 0.3);
+	margin: auto;
+	margin-bottom: 30px;
+  width: 90%;
+  background: #eee;
   padding: 10px;
   position: relative;
+	box-shadow: 0 4px #eee, 0 -4px #eee, 4px 0 #eee, -4px 0 #eee, 0 0 0 4px #999, 0 12px 0 4px #999, 0 20px #999, -8px 0 #999, 8px 0 #999, -8px 12px #999, 8px 12px #999, 0 -8px #999;
 }
 #message-box #message-input {
   background: none;
   border: none;
   outline: none !important;
   resize: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 11px;
-  height: 17px;
+  color: #444;
+	font-family: a15bit;
+  font-size: 30px;
+	height: 35px;
   margin: 0;
-  padding-right: 20px;
-  width: 265px;
+  width: 100%;
 }
-#message-box textarea:focus:-webkit-placeholder {
+/*#message-box textarea:focus:-webkit-placeholder {
   color: transparent;
-}
+}*/
 #message-box #message-submit {
   position: absolute;
   z-index: 1;
@@ -660,27 +644,11 @@ Message Box
   border-radius: 10px;
   outline: none !important;
   transition: background .2s ease;
+	display: none;
 }
-#message-box #message-submit:hover {
+/*#message-box #message-submit:hover {
   background: #1D7745;
-}
-
-/*--------------------
-Custom Srollbar
---------------------*/
-.mCSB_scrollTools {
-  margin: 1px -3px 1px 0;
-  opacity: 0;
-}
-
-.mCSB_inside > .mCSB_container {
-  margin-right: 0px;
-  padding: 0 10px;
-}
-
-.mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar {
-  background-color: rgba(0, 0, 0, 0.5) !important;
-}
+}*/
 
 /*--------------------
 Bounce
