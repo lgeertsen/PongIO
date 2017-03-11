@@ -255,7 +255,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
   this.createAI = function() { // Fonction pour la creation d'un AI
     var aiSocket = { id: random(1, 1000000000) }; // Attribution d'un id
-    var name = NAMES[random(0, NAMES.length)] + "[AI]";
+    var name = "[AI] " + NAMES[random(0, NAMES.length)];
     var color = COLORS[random(0, COLORS.length)].hexValue;
     var ai = new Player(aiSocket, name, color ,true); // Creation d'un joueur AI
     Player.list[ai.id] = ai; // Ajout au liste des joueurs
@@ -652,7 +652,7 @@ Goal.list = {}
 // Classe pour des balls
 var Ball = function(game) {
   this.id = random(1, 1000000000); // Attribution d'un id au ball
-  this.radius = 5; // Le rayon du ball
+  this.radius = 10; // Le rayon du ball
   this.x = 0;
   this.y = 0;
   this.speed = 6;

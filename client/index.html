@@ -13,7 +13,10 @@
       <div id="start" class="row">
         <h2>PONGIO</h2>
         <div class="col s6 m4">
-          <div class="card valign-wrapper bitshadow-grey">
+          <div id="controls" class="card bitshadow-grey">
+            <h3>CONTROLS</h3>
+            <h5>Move left: <span>Q</span></h5>
+            <h5>Move right: <span>D</span></h5>
           </div>
         </div>
         <div class="col s6 m4">
@@ -96,14 +99,26 @@
                 <button id="startButton" class="bitshadow-grey" type="submit">Play</button>
               </form>
             </div>
-            <div class="card-reveal">
-              <span class="card-title grey-text text-darken-4">Color<i class="material-icons right">close</i></span>
-            </div>
           </div>
         </div>
         <div class="col s6 m4">
-          <div class="card valign-wrapper bitshadow-grey">
-            create account
+          <div id="login" class="card bitshadow-grey">
+            <h3>LOGIN & REGISTER</h3>
+            <form id="start-form">
+              <!-- <div class="card-title activator color-circle" id="circle"></div> -->
+              <!-- <h6>Choose your color</h6> -->
+              <div class="input-field">
+                <input tabindex="0" autofocus placeholder="Username" id="usernameInput" autocomplete="off" type="text">
+              </div>
+              <div class="input-field">
+                <input tabindex="0" autofocus placeholder="Email (registration only)" id="emailInput" autocomplete="off" type="text">
+              </div>
+              <div class="input-field">
+                <input tabindex="0" autofocus placeholder="Password" id="passwordInput" type="password">
+              </div>
+              <button id="loginButton" class="bitshadow-grey" type="submit">Login</button>
+              <button id="registerButton" class="bitshadow-grey" type="submit">Register</button>
+            </form>
           </div>
         </div>
       </div>
@@ -123,6 +138,10 @@
       <canvas id="ctx" width="800" height="800"></canvas>
     </div>
     <div id="leaderboard">
+      <div id="leaderboard-title">
+        <h1>LEADERBOARD</h1>
+      </div>
+      <div id="leaderboard-content"></div>
     </div>
     <div id="chat">
       <div id="chat-title" class="bitshadow-grey">
