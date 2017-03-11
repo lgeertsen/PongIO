@@ -569,7 +569,8 @@ Messages
   margin-left: 35px;
   position: relative;
 	max-width: 100%;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+	color: #fff;
+  text-shadow: 0 2px 1px rgba(0, 0, 0, 1), 2px 0 1px rgba(0, 0, 0, 1);
 	word-break: break-all;
 }
 #messages .message .timestamp {

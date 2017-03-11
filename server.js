@@ -153,7 +153,8 @@ var GameServer = function() {
 
   // Fontion pour créer un nouveau jeu pour un joueur
   this.createGame = function(player) {
-    var room = new Game(player);  // Creation du jeu
+    var mode = random(0, MODES.length);
+    var room = new Game(MODES[mode], player);  // Creation du jeu
 
     this.rooms[room.id] = room;  // Ajouter le jeu au liste des jeux
 
@@ -180,11 +181,74 @@ var gameServer = new GameServer();
 //         GAME          //
 ///////////////////////////
 
+var MODES = [
+  {
+    players: 6,
+    balls: 1,
+    walls: [
+      [55, 65],
+      [115, 125],
+      [175, 185],
+      [235, 245],
+      [295, 305],
+      [355, 5]
+    ],
+    goals: [
+      [65, 115, 1, 332],
+      [245, 295, 2, 332],
+      [125, 175, 3, 332],
+      [305, 355, 4, 332],
+      [185, 235, 5, 332],
+      [5, 55, 6, 332]
+    ]
+  },
+  {
+    players: 2,
+    balls: 1,
+    walls: [
+      [110, 240],
+      [290, 60]
+    ],
+    goals: [
+      [60, 110, 1, 332],
+      [240, 290, 2, 332]
+    ]
+  },
+  {
+    players: 10,
+    balls: 1,
+    walls: [
+      [33, 39],
+      [69, 75],
+      [105, 111],
+      [141, 147],
+      [177, 183],
+      [213, 219],
+      [249, 255],
+      [285, 291],
+      [321, 327],
+      [357, 3]
+    ],
+    goals: [
+      [3, 33, 1, 332],
+      [39, 69, 2, 332],
+      [75, 105, 3, 332],
+      [111, 141, 4, 332],
+      [147, 177, 5, 332],
+      [183, 213, 6, 332],
+      [219, 249, 7, 332],
+      [255, 285, 8, 332],
+      [291, 321, 9, 332],
+      [327, 357, 10, 332]
+    ]
+  }
+]
+
 // Une objet de la classe game gère un jeu
-var Game = function(player) { // Le premier joueur est passer à la création du jeu
+var Game = function(mode, player) { // Le premier joueur est passer à la création du jeu
   this.id = random(1, 1000000000);        // Le id du jeu
   player.localId = 1;                     // Le id local du joueur, c-a-d le nb du jouer dans le jeu
-  this.maxPlayers = 6;                    // Le nombre max des joueurs dans le jeu
+  this.maxPlayers = mode.players;                    // Le nombre max des joueurs dans le jeu
   this.players = {};                      // La liste des joueurs dans le jeu
   this.players[player.localId] = player;  // Ajouter le premier à la liste des joueurs
   this.playerCount = 1;                   // Le nombre de joueurs dans le jeu
@@ -192,8 +256,8 @@ var Game = function(player) { // Le premier joueur est passer à la création du
   this.width = 800;                       // la longeur du jeu (pour la map)
   this.height = 800;                      // La hauteur du jeu (pour la map)
   this.wallWidth = 12;                    // L'épaisseur des murs
-  this.map = new Map(this.playerPosition);           // Création du map
-  this.ballCount = 1;                     // Le nombre de balls dans le jeu
+  this.map = new Map(mode.walls, mode.goals);           // Création du map
+  this.ballCount = mode.balls;                     // Le nombre de balls dans le jeu
   this.constructBalls = function() {      // Creation de tout les balls
     var balls = [];
     for(var n = 0 ; n < this.ballCount ; n++)
@@ -217,14 +281,15 @@ var Game = function(player) { // Le premier joueur est passer à la création du
     player.x = (goal.px1 + goal.px2) / 2;
     player.y = (goal.py1 + goal.py2) / 2;
     var angle = Math.abs(Math.atan2(player.y, player.x)) * 180 / Math.PI;
-    if(goal.angle2 == 0) {
-      player.angle = (goal.angle1 + 360) / 2;
+    if(goal.angle2-360 >= 0) {
+      player.angle = (goal.angle1 + goal.angle2 + 360) / 2;
     } else {
       player.angle = (goal.angle1 + goal.angle2) / 2;
     }
     player.rotation = goal.rotation;
     player.position = goal.length/2;
-    player.destination = player.position;
+    player.depth = goal.depth;
+    //player.destination = player.position;
     player.goal = goal;
   } // fin assignAttributesToPlayer
 
@@ -293,7 +358,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 
   // Fonction pour envoyer la map
   this.sendMap = function() {
-    this.sendPackage('map', { playerY: this.playerY, walls: this.map.walls, goals: this.map.goals });
+    this.sendPackage('map', { walls: this.map.walls, goals: this.map.goals });
   }
 
   // Fonction pour mettre en joueur dan le pack d'initialization
@@ -314,6 +379,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
       y2: player.y2,
       width: player.width,
       height: player.height,
+      depth: player.depth,
       length: player.goal.length,
       color: player.color,
       score: player.score
@@ -504,7 +570,7 @@ var Game = function(player) { // Le premier joueur est passer à la création du
 ///////////////////////////
 
 // La classe pour la map
-var Map = function(p) {
+var Map = function(walls, goals) {
   // var w = game.width; // La longeur de la map
   // var h = game.height; // La largeur de la map
   // var ww = game.wallWidth; // L'épaisseur des murs
@@ -516,24 +582,34 @@ var Map = function(p) {
   this.walls = {};
   this.goals = {};
 
-  console.log("REAL WALLS");
-  var wall = new Wall(55, 65);
-  this.walls[wall.id] = wall;
+  for(var i = 0; i < walls.length; i++) {
+    var wall = new Wall(walls[i][0], walls[i][1]);
+    this.walls[wall.id] = wall;
+  }
 
-  wall = new Wall(115, 125);
-  this.walls[wall.id] = wall;
+  for(var i = 0; i < goals.length; i++) {
+    var goal = new Goal(goals[i][0], goals[i][1], goals[i][2], goals[i][3]);
+    this.goals[goal.localId] = goal;
+  }
 
-  wall = new Wall(175, 185);
-  this.walls[wall.id] = wall;
-
-  wall = new Wall(235, 245);
-  this.walls[wall.id] = wall;
-
-  wall = new Wall(295, 305);
-  this.walls[wall.id] = wall;
-
-  wall = new Wall(355, 5);
-  this.walls[wall.id] = wall;
+  // console.log("REAL WALLS");
+  // var wall = new Wall(55, 65);
+  // this.walls[wall.id] = wall;
+  //
+  // wall = new Wall(115, 125);
+  // this.walls[wall.id] = wall;
+  //
+  // wall = new Wall(175, 185);
+  // this.walls[wall.id] = wall;
+  //
+  // wall = new Wall(235, 245);
+  // this.walls[wall.id] = wall;
+  //
+  // wall = new Wall(295, 305);
+  // this.walls[wall.id] = wall;
+  //
+  // wall = new Wall(355, 5);
+  // this.walls[wall.id] = wall;
 
 
   // console.log("TEMP WALLS");
@@ -546,24 +622,23 @@ var Map = function(p) {
   // wall = new Wall(300, 0);
   // Wall.list[wall.id] = wall;
 
-
-  var goal = new Goal(65, 115, 1, p);
-  this.goals[goal.localId] = goal;
-
-  goal = new Goal(125, 175, 3, p);
-  this.goals[goal.localId] = goal;
-
-  goal = new Goal(185, 235, 5, p);
-  this.goals[goal.localId] = goal;
-
-  goal = new Goal(245, 295, 2, p);
-  this.goals[goal.localId] = goal;
-
-  goal = new Goal(305, 355, 4, p);
-  this.goals[goal.localId] = goal;
-
-  goal = new Goal(5, 55, 6, p);
-  this.goals[goal.localId] = goal;
+  // var goal = new Goal(65, 115, 1, 332);
+  // this.goals[goal.localId] = goal;
+  //
+  // goal = new Goal(125, 175, 3, 332);
+  // this.goals[goal.localId] = goal;
+  //
+  // goal = new Goal(185, 235, 5, 332);
+  // this.goals[goal.localId] = goal;
+  //
+  // goal = new Goal(245, 295, 2, 332);
+  // this.goals[goal.localId] = goal;
+  //
+  // goal = new Goal(305, 355, 4, 332);
+  // this.goals[goal.localId] = goal;
+  //
+  // goal = new Goal(5, 55, 6, 332);
+  // this.goals[goal.localId] = goal;
 } // fin classe Map
 
 
@@ -621,6 +696,8 @@ var Goal = function(angle1, angle2, localId, pos) {
   this.py1 = Math.sin(angle1 * Math.PI / 180) * pos;
   this.px2 = Math.cos(angle2 * Math.PI / 180) * pos;
   this.py2 = Math.sin(angle2 * Math.PI / 180) * pos;
+
+  this.depth = Math.cos((Math.abs(this.angle1 - this.angle2) / 2) / 180 * Math.PI) * pos;
 
   var eq = getEquation(this.x1, this.y1, this.x2, this.y2);
 
@@ -732,7 +809,7 @@ var Ball = function(game) {
       var d = Math.sqrt(Math.pow(foundIntercept.x-p.x, 2) + Math.pow(foundIntercept.y-p.y, 2));
       var d2 = Math.sqrt(Math.pow(foundIntercept.x-p.x1, 2) + Math.pow(foundIntercept.y-p.y1, 2));
       var perc = d/p.width;
-      var angle = 45 * perc;
+      var angle = 60 * perc;
       if(d2 < p.width) {
         angle *= -1;
       }
@@ -960,7 +1037,7 @@ var Player = function(socket, username, color, isAI) {
       this.position -= this.speed;
     } else if(this.moveRight && this.position < this.goal.length-this.width-this.speed) {
       var x = (Math.sqrt(4 * Math.pow(this.speed, 2) * (1 + Math.pow(this.goal.a, 2)))) / (2 * (1 + Math.pow(this.goal.a, 2)));
-      if(this.angle > 180) {
+      if(this.angle >= 180) {
         x *= -1;
       }
       var y = this.goal.a * x;

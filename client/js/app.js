@@ -22,7 +22,6 @@ var list = document.getElementsByName("colors");
 var ID;
 var ROTATED = false;
 var FOCUSED = false;
-var stopParticles = false;
 
 var Img = {};
 Img.player = new Image();
@@ -104,11 +103,6 @@ window.onload = function() {
   startForm.onsubmit = function(e) {
     e.preventDefault();
     if(validNickname()) {
-      // window.pJSDom = [];
-      // var m = document.getElementById('startMenuWrapper');
-      // var p = document.getElementById('particles-js');
-      // m.removeChild(p);
-      // stopParticles = true;
       startGame();
     } else {
       errorText.style.color = 'red';
@@ -145,17 +139,24 @@ var onSocket = function(socket) {
     //Materialize.toast(data, 4000);
     var message = document.createElement('div');
     message.innerHTML = data.msg;
+    var style = document.createElement("style");
+    document.head.appendChild(style);
+    sheet = style.sheet;
     if(data.id == ID) {
-      message.className = "message message-personal new";
+      message.className = "message message-personal new ";
+      sheet.addRule('#messages .message.message-personal::before', 'border-top: 4px solid ' + Player.list[data.id].color);
     } else {
       message.className = "message new"
       var avatar = document.createElement('div');
       avatar.className = "avatar";
       avatar.style.background = Player.list[data.id].color;
-      message.appendChild(avatar);;
+      message.appendChild(avatar);
+      sheet.addRule('#messages .message::before', 'border-top: 6px solid ' + Player.list[data.id].color);
     }
     //$('<div class="message message-personal">' + msg + '</div>').appendTo($('.mCSB_container')).addClass('new');
+    message.style.background = Player.list[data.id].color;
     chatContent.appendChild(message);
+    message.scrollIntoView();
   });
 
   socket.on('evalAnswer', function(data) {
@@ -344,6 +345,7 @@ var Player = function(initPack) {
   this.width = initPack.width;
   this.height = initPack.height;
   this.length = initPack.length;
+  this.depth = initPack.depth;
   this.color = initPack.color;
   this.score = initPack.score;
 
@@ -598,13 +600,21 @@ var drawPlayers = function() {
     //var angle = (-p.angle / 180 * Math.PI) + (Math.PI/2);
     ctx.rotate(angle);
     var x = p.position - p.length/2;
-    var y = MAP.playerY;
+    var y = p.depth;
+    //var y = MAP.playerY;
     // ctx.drawImage(Img.player,
     //   0, 0, Img.player.width, Img.player.height,
     //   x-p.width, y, p.width*2, 15);
     ctx.fillRect(x-p.width, y, p.width*2, 15);
+    //ctx.fillRect(p.x,p.y,p.width*2, 15);
     ctx.rotate(-angle);
 
+    // ctx.beginPath();
+    // ctx.arc(p.x, p.y, 10, 0, 2*Math.PI, true);
+    // ctx.fill();
+    // ctx.closePath();
+    //
+    // ctx.strokeStyle = 'black';
     // ctx.beginPath();
     // ctx.moveTo(p.x1, p.y1);
     // ctx.lineTo(p.x2, p.y2);
