@@ -206,12 +206,12 @@ var MODES = [
     players: 2,
     balls: 1,
     walls: [
-      [110, 240],
-      [290, 60]
+      [120, 230],
+      [300, 50]
     ],
     goals: [
-      [60, 110, 1, 332],
-      [240, 290, 2, 332]
+      [50, 120, 1, 332],
+      [230, 300, 2, 332]
     ]
   },
   {
@@ -240,6 +240,20 @@ var MODES = [
       [255, 285, 8, 332],
       [291, 321, 9, 332],
       [327, 357, 10, 332]
+    ]
+  },
+  {
+    players: 4,
+    balls: 2,
+    walls: [
+      [130, 220],
+      [310, 40]
+    ],
+    goals: [
+      [40, 130, 1, 332],
+      [220, 310, 2, 332],
+      [40, 130, 3, 332],
+      [220, 310, 4, 332]
     ]
   }
 ]
@@ -321,7 +335,7 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
   this.createAI = function() { // Fonction pour la creation d'un AI
     var aiSocket = { id: random(1, 1000000000) }; // Attribution d'un id
     var name = "[AI] " + NAMES[random(0, NAMES.length)];
-    var color = COLORS[random(0, COLORS.length)].hexValue;
+    var color = COLORS[random(0, COLORS.length)].id;
     var ai = new Player(aiSocket, name, color ,true); // Creation d'un joueur AI
     Player.list[ai.id] = ai; // Ajout au liste des joueurs
     var i = 1;

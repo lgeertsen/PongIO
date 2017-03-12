@@ -77,7 +77,7 @@ var startGame = function() {
 
   socket = io();
 
-  socket.emit('newPlayer', { username: playerName, color: color.hexValue });
+  socket.emit('newPlayer', { username: playerName, color: color.id });
 
   onSocket(socket);
   animloop();
@@ -105,7 +105,7 @@ window.onload = function() {
     if(validNickname()) {
       startGame();
     } else {
-      errorText.style.color = 'red';
+      errorText.style.display = 'block';
     }
   }
 }
@@ -143,18 +143,18 @@ var onSocket = function(socket) {
     document.head.appendChild(style);
     sheet = style.sheet;
     if(data.id == ID) {
-      message.className = "message message-personal new ";
-      sheet.addRule('#messages .message.message-personal::before', 'border-top: 4px solid ' + Player.list[data.id].color);
+      message.className = "message message-personal new " + COLORS[Player.list[data.id].color - 1].name;
+      //sheet.addRule('#messages .message.message-personal::before', 'border-top: 4px solid ' + COLORS[Player.list[data.id].color - 1].hexValue);
     } else {
-      message.className = "message new"
+      message.className = "message new " + COLORS[Player.list[data.id].color - 1].name;
       var avatar = document.createElement('div');
       avatar.className = "avatar";
-      avatar.style.background = Player.list[data.id].color;
+      avatar.style.background = COLORS[Player.list[data.id].color - 1].hexValue;
       message.appendChild(avatar);
-      sheet.addRule('#messages .message::before', 'border-top: 6px solid ' + Player.list[data.id].color);
+      //sheet.addRule('#messages .message::before', 'border-top: 6px solid ' + COLORS[Player.list[data.id].color - 1].hexValue);
     }
     //$('<div class="message message-personal">' + msg + '</div>').appendTo($('.mCSB_container')).addClass('new');
-    message.style.background = Player.list[data.id].color;
+    message.style.background = COLORS[Player.list[data.id].color - 1].hexValue;
     chatContent.appendChild(message);
     message.scrollIntoView();
   });
@@ -355,12 +355,12 @@ var Player = function(initPack) {
   var name = document.createElement("div");
   name.id = "player" + this.id;
   name.className = "name"
-  name.style.color = this.color;
+  name.style.color = COLORS[this.color - 1].hexValue;
   name.innerHTML = this.username;
   var score = document.createElement("div");
   score.id = "score" + this.id;
   score.className = "score valign";
-  score.style.color = this.color;
+  score.style.color = COLORS[this.color - 1].hexValue;
   score.innerHTML = this.score
   div.appendChild(name);
   div.appendChild(score);
@@ -595,7 +595,7 @@ var drawPlayers = function() {
   ctx.strokeStyle = "green";
   for(var i in Player.list) {
     var p = Player.list[i];
-    ctx.fillStyle = p.color;
+    ctx.fillStyle = COLORS[p.color - 1].hexValue;
     var angle = (p.angle-90) * Math.PI / 180;
     //var angle = (-p.angle / 180 * Math.PI) + (Math.PI/2);
     ctx.rotate(angle);

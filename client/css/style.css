@@ -390,8 +390,9 @@ canvas {
 }*/
 
 #startMenu #input-error {
-  color: transparent;
-  font-size: 12px;
+	display: none;
+	font-family: a15bit;
+  font-size: 15px;
 }
 
 #leaderboard {
@@ -587,6 +588,7 @@ Messages
   left: 0;
   border-right: 7px solid transparent;
 }
+
 #messages .message .avatar {
   position: absolute;
   z-index: 1;
@@ -618,6 +620,56 @@ Messages
   border-top: 4px solid #f44336;
   bottom: -4px;
 }
+
+#messages .red.message::before {
+  border-top-color: #f44336;
+}
+#messages .pink.message::before {
+  border-top-color: #e91e63;
+}
+#messages .purple.message::before {
+  border-top-color: #9c27b0;
+}
+#messages .deep-purple.message::before {
+  border-top-color: #673ab7;
+}
+#messages .indigo.message::before {
+  border-top-color: #3f51b5;
+}
+#messages .blue.message::before {
+  border-top-color: #2196f3;
+}
+#messages .light-blue.message::before {
+  border-top-color: #03a9f4;
+}
+#messages .cyan.message::before {
+  border-top-color: #00bcd4;
+}
+#messages .teal.message::before {
+  border-top-color: #009688;
+}
+#messages .green.message::before {
+  border-top-color: #4caf50;
+}
+#messages .light-green.message::before {
+  border-top-color: #8bc34a;
+}
+#messages .lime.message::before {
+  border-top-color: #cddc39;
+}
+#messages .yellow.message::before {
+  border-top-color: #ffeb3b;
+}
+#messages .amber.message::before {
+  border-top-color: #ffc107;
+}
+#messages .orange.message::before {
+  border-top-color: #ff9800;
+}
+#messages .deep-orange.message::before {
+  border-top-color: #ff5722;
+}
+
 #messages .message:last-child {
   margin-bottom: 30px;
 }
