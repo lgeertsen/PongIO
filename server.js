@@ -34,6 +34,9 @@ var COLORS = [
   new Color(16, "deep-orange", "#ff5722")     // 16
 ];
 
+var countdown = [];
+var timer;
+
 
 
 ///////////////////////////
@@ -121,7 +124,7 @@ console.log(":: Express :: Listening on port 3000");
 
 
 ///////////////////////////
-//      GAME SERVER      //
+//      GAMESERVER       //
 ///////////////////////////
 
 // La classe GameServer gère la creation, ... des jeux
@@ -159,14 +162,29 @@ var GameServer = function() {
     this.rooms[room.id] = room;  // Ajouter le jeu au liste des jeux
 
     this.roomCount++;  // Incrementer le compteur des jeux
+
+    room.start();
   } // fin createGame
+
+  this.endGame = function(id, players) {
+    delete this.rooms[id];
+    this.roomCount--;
+    for(var i in players) {
+      if(!players[i].isAI) {
+        SOCKET_LIST[players[i].id].emit('endGame');
+        this.findGame(players[i]);
+      }
+    }
+  }
 
   // Mettre a jour tout les chambres
   this.updateRooms = function() {
     for(var i in gameServer.rooms) { // Pour chaque chambre
       var room = gameServer.rooms[i];
       room.initPlayers(); // Si il y a un nouveau joueur, ce fonction envoie les donnees du nouveau joueur a tout les joueurs
-      room.update(); // Envoie la mise du jeu à tout les joueurs (coordonées des joueurs, du ball)
+      if(room.started) {
+        room.update(); // Envoie la mise du jeu à tout les joueurs (coordonées des joueurs, du ball)
+      }
       room.removePlayers(); // Si un joueur quitte le jeu, dire aux autres qui à quitté
     } // fin for
   } // fin updateRooms
@@ -194,12 +212,12 @@ var MODES = [
       [355, 5]
     ],
     goals: [
+      [5, 55, 6, 332],
       [65, 115, 1, 332],
-      [245, 295, 2, 332],
       [125, 175, 3, 332],
-      [305, 355, 4, 332],
       [185, 235, 5, 332],
-      [5, 55, 6, 332]
+      [245, 295, 2, 332],
+      [305, 355, 4, 332]
     ]
   },
   {
@@ -231,14 +249,14 @@ var MODES = [
     ],
     goals: [
       [3, 33, 1, 332],
-      [39, 69, 2, 332],
-      [75, 105, 3, 332],
-      [111, 141, 4, 332],
-      [147, 177, 5, 332],
-      [183, 213, 6, 332],
-      [219, 249, 7, 332],
-      [255, 285, 8, 332],
-      [291, 321, 9, 332],
+      [39, 69, 3, 332],
+      [75, 105, 5, 332],
+      [111, 141, 7, 332],
+      [147, 177, 9, 332],
+      [183, 213, 2, 332],
+      [219, 249, 4, 332],
+      [255, 285, 6, 332],
+      [291, 321, 8, 332],
       [327, 357, 10, 332]
     ]
   },
@@ -261,6 +279,8 @@ var MODES = [
 // Une objet de la classe game gère un jeu
 var Game = function(mode, player) { // Le premier joueur est passer à la création du jeu
   this.id = random(1, 1000000000);        // Le id du jeu
+  this.started = false;
+  this.time = 120;
   player.localId = 1;                     // Le id local du joueur, c-a-d le nb du jouer dans le jeu
   this.maxPlayers = mode.players;                    // Le nombre max des joueurs dans le jeu
   this.players = {};                      // La liste des joueurs dans le jeu
@@ -285,6 +305,35 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
     balls: []
   };
   this.removePack = []; // Le pack pour le remove
+
+  this.start = function() {
+    countdown[0] = setTimeout(function(id) {
+      gameServer.rooms[id].sendPackage('countdown', 'READY?');
+      countdown[1] = setTimeout(function(id) {
+        gameServer.rooms[id].sendPackage('countdown', '3');
+        countdown[2] = setTimeout(function(id) {
+          gameServer.rooms[id].sendPackage('countdown', '2');
+          countdown[3] = setTimeout(function(id) {
+            gameServer.rooms[id].sendPackage('countdown', '1');
+            countdown[4] = setTimeout(function(id) {
+              gameServer.rooms[id].sendPackage('countdown', 'GO!');
+              countdown[5] = setTimeout(function(id) {
+                gameServer.rooms[id].sendPackage('start', '3');
+                gameServer.rooms[id].started = true;
+                gameServer.rooms[id].countdown();
+              }, 1000, id);
+            }, 1000, id);
+          }, 1000, id);
+        }, 1000, id);
+      }, 1000, id);
+    }, 1000, this.id);
+  }
+
+  this.countdown = function() {
+    timer = setInterval(function(id) {
+      gameServer.rooms[id].time--;
+    }, 100, this.id);
+  }
 
   this.assignAttributesToPlayer = function(player) { // Donner des attributs à un jouer qui à rejoint le jeu
     player.roomId = this.id;  // Attribution de l'id du jeu au variable roomId du joueur
@@ -424,6 +473,12 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
 
   // Fonction pour la mise a jour du jeu
   this.update = function() {
+    //console.log("TIMER:" + this.time);
+    if(this.time == 0) {
+      clearInterval(countdown);
+      gameServer.endGame(this.id, this.players);
+      return
+    }
     var pack = {
       players: [],
       balls: []
@@ -1103,6 +1158,10 @@ Player.onDisconnect = function(socket) {
     delete room.players[player.localId];
     room.playerCount--;
     if(room.playerCount <= 0) {
+      clearInterval(timer);
+      for(var i = 0; i < countdown.length; i++) {
+        clearTimeout(countdown[i]);
+      }
       delete gameServer.rooms[player.roomId];
       gameServer.roomCount--;
     } else {

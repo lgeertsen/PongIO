@@ -65,11 +65,20 @@ html, body {
 	height: 380px;
 }
 
+#gameText {
+	position: absolute;
+	font-family: a15bit;
+	font-size: 150px;
+	width: 500px;
+	text-align: center;
+}
+
 #gameWrapper {
 	height: 800px;
 }
 
 canvas {
+	position: absolute;
 	width: 100%;
   margin: 0;
   padding: 0;
@@ -439,6 +448,13 @@ canvas {
 	font-family: bitcube;
 	width: 20%;
 	font-size: 30px;
+}
+
+#timer {
+	margin-top: 10px;
+	font-size: 80px;
+	font-family: a15bit;
+	text-align: center;
 }
 
 /*#chat {

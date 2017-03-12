@@ -4,12 +4,24 @@ var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
 
 var c = document.getElementById('ctx');
+var c2 = document.getElementById('ctext');
 var ctx = c.getContext('2d');
+var cui = c2.getContext('2d');
 ctx.translate(400, 400);
+cui.translate(400, 400);
 c.style.height = screenHeight + "px";
 c.style.width = screenHeight + "px";
 c.style.marginLeft = ((screenWidth-screenHeight)/2) + "px";
+c2.style.height = screenHeight + "px";
+c2.style.width = screenHeight + "px";
+c2.style.marginLeft = ((screenWidth-screenHeight)/2) + "px";
 //c.width = screenWidth; c.height = screenHeight
+
+var gameText = document.getElementById('gameText');
+gameText.style.left = ((screenWidth/2) - 250) + "px";
+gameText.style.top = ((screenHeight/2) - 120) + "px";
+
+var timer = document.getElementById('timer');
 
 var s = document.getElementById('start');
 s.style.marginTop = (((screenHeight-500)/2)-30) + "px";
@@ -22,6 +34,9 @@ var list = document.getElementsByName("colors");
 var ID;
 var ROTATED = false;
 var FOCUSED = false;
+var STARTED = false;
+var TIME = 120;
+var TIMER;
 
 var Img = {};
 Img.player = new Image();
@@ -95,6 +110,8 @@ window.onload = function() {
   var btn = document.getElementById('startButton');
   var errorText = document.getElementById('input-error');
   var input = document.getElementById('playerNameInput');
+  // cui.font = '80px a15bit';
+  // cui.fillText('READY?', 50, 100);
   //input.style.borderBottom = "2px solid " + color.hexValue;
   // var circle = document.getElementById('circle');
   // circle.style.background = color.hexValue;
@@ -132,6 +149,47 @@ var onSocket = function(socket) {
 
   socket.on('playerDisconnect', function() {
     socket.close();
+  });
+
+  socket.on('countdown', function(data) {
+    gameText.innerHTML = data;
+  });
+
+  socket.on('start', function() {
+    gameText.innerHTML = '';
+    STARTED = true;
+    TIMER = setInterval(function() {
+      TIME--;
+      var s = TIME % 60;
+      console.log(s);
+      var m = (TIME - s) / 60;
+      timer.innerHTML = m + ":";
+      if(s < 10) {
+        timer.innerHTML += "0" + s;
+      } else {
+        timer.innerHTML += s;
+      }
+      if(m == 0 && s < 10) {
+        timer.style.color = "#f44336";
+      }
+    }, 100);
+  });
+
+  socket.on('endGame', function() {
+    for(var i in Player.list) {
+      delete Player.list[i];
+    }
+    for(var i in Ball.list) {
+      delete Ball.list[i];
+    }
+    ROTATED = false;
+    STARTED = false;
+    TIME = 120;
+    leaderboard.innerHTML = '';
+    timer.style.color = "black";
+    timer.innerHTML = "2:00";
+    ctx.resetTransform();
+    ctx.translate(400, 400);
   });
 
   socket.on('addToChat', function(data) {
@@ -674,17 +732,22 @@ function animloop() {
 }
 
 function gameLoop() {
-  for(var i in Ball.list) {
-    Ball.list[i].update();
-  }
-  for(var i in Player.list) {
-    Player.list[i].update();
+  if(TIME == 0) {
+    clearInterval(TIMER);
   }
   ctx.clearRect(-600, -600, 1200, 1200);
+  if(STARTED) {
+    for(var i in Ball.list) {
+      Ball.list[i].update();
+    }
+    for(var i in Player.list) {
+      Player.list[i].update();
+    }
+    drawBalls();
+  }
   drawWalls();
   drawGoals();
   drawPlayers();
-  drawBalls();
   // for(var i in Ball.list) {
   //   var p1 = Ball.list[i];
   //   for(var j in Ball.list) {
