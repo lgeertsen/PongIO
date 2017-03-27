@@ -1,3 +1,89 @@
+this.ai = function() {
+    for(var i in this.balls) {
+      var ball = this.balls[i];
+      var b = new Ball();
+      b.x = ball.x;
+      b.y = ball.y;
+      b.spdX = ball.spdX;
+      b.spdY = ball.spdY;
+      b.game = ball.game;
+      var newPosition = b.accelerate();
+      //var interception = intercept(b.x, b.y, newPosition.x, newPosition.y, player.goal.x1, player.goal.y1, player.goal.x2, player.goal.y2, false);
+      var interception;
+      var i = 0;
+      while(!interception && i < 1000) {
+        interception = b.update(this.players, this.map.walls, this.map.goals, true);
+        i++;
+      }
+
+      if(interception) {
+        if(interception.player) {
+          // var p = this.players[interception.id];
+          // if(p.isAI && i < p.distance) {
+          //   p.destination = this.position;
+          //   p.distance = i;
+          // }
+          return;
+        } else {
+          // var g = this.map.goals[interception.id];
+          //console.log("found interception in goal " + g.localId);
+          // var p = this.players[g.localId];
+          //if(p.isAI) {
+            //console.log("interception at: " + interception.x + " " + interception.y);
+            // var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
+            // if(!p.destination || i < p.distance) {
+            //   p.destination = d;
+            //   p.distance = i;
+            // }
+            var maximum = {}, difference = {}, difference2 = {};
+            for(var i in this.map.goals) {
+              var w = this.map.goals[i];
+              for(var j in this.players){
+                var p = this.players[j];
+                difference.x1 = Math.sqrt(Math.pow((w.x1-p.x),2)+Math.pow((w.y1-p.y),2));
+                difference.x2 = Math.sqrt(Math.pow((w.x2-p.x),2)+ Math.pow((w.y2-p.y),2));
+                if(difference.x1>=difference.x2 && maximum.d<=difference.x1){
+                  maximum.d = difference.x1;
+                  maximum.x = w.x1;
+                  maximum.y = w.y1;
+                }
+                if(difference.x2>=difference.x1 && maximum.d<=difference.x2){
+                  maximum.d = difference.x2;
+                  maximum.x = w.x1;
+                  maximum.y = w.y1;
+                }
+              }
+            }
+            var g = this.map.goals[interception.id];
+            var p = this.players[g.localId];
+            if(p.isAI){
+            for(var i in this.balls) {
+              var ball = this.balls[i];
+              var ac =  Math.sqrt(Math.pow((w.y2-p.y), 2) + Math.pow((w.x2-p.x), 2));
+              var ab =  Math.sqrt(Math.pow((ball.y-p.y), 2) + Math.pow((ball.x-p.x), 2));
+              var bc =  Math.sqrt(Math.pow((ball.y-w.y2), 2) + Math.pow((ball.x-w.x2), 2));
+              interception.angle = Math.acos((Math.pow(ab,2)-Math.pow(ac,2)-Math.pow(bc,2))/(-2*ac*bc));
+              bc = Math.sqrt(Math.pow((ball.y-interception.y), 2) + Math.pow((ball.x-interception.x), 2));
+              ab = Math.sqrt(Math.pow((ball.y-maximum.y), 2) + Math.pow((ball.x-maximum.x), 2));
+              ac = Math.sqrt(Math.pow((interception.y-maximum.y), 2) + Math.pow((interception.x-maximum.x), 2));
+              var angle = Math.acos((Math.pow(ab,2)-Math.pow(ac,2)-Math.pow(bc,2))/(-2*ac*bc)) + interception.angle;
+              var dist = ((angle-90)/60)*p.width;
+              p.destination = dist;
+              p.distance = i;
+            }
+          }
+        }
+      }
+
+      for(var i in this.players) {
+        var p = this.players[i];
+        if(p.isAI && !p.destination) {
+          var d = random(0, p.goal.length);
+          p.destination = d;
+        }
+      }
+    }
+  }
 // Mettre bibliothèque express dans une variable
 var express = require('express');
 // Creation d'une application express
