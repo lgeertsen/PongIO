@@ -157,7 +157,8 @@ var GameServer = function() {
   // Fontion pour créer un nouveau jeu pour un joueur
   this.createGame = function(player) {
     var mode = random(0, MODES.length);
-    var room = new Game(MODES[mode], player);  // Creation du jeu
+    //var room = new Game(MODES[mode], player);  // Creation du jeu
+    var room = new Game(MODES[4], player);
 
     this.rooms[room.id] = room;  // Ajouter le jeu au liste des jeux
 
@@ -205,74 +206,94 @@ var MODES = [
     players: 6,
     balls: 1,
     walls: [
-      [55, 65],
-      [115, 125],
-      [175, 185],
-      [235, 245],
-      [295, 305],
-      [355, 5]
+      [55, 65, 350, 350],
+      [115, 125, 350, 350],
+      [175, 185, 350, 350],
+      [235, 245, 350, 350],
+      [295, 305, 350, 350],
+      [355, 5, 350, 350]
     ],
     goals: [
-      [5, 55, 6, 332],
-      [65, 115, 1, 332],
-      [125, 175, 3, 332],
-      [185, 235, 5, 332],
-      [245, 295, 2, 332],
-      [305, 355, 4, 332]
+      [5, 55, 6, 332, 350, 350],
+      [65, 115, 1, 332, 350, 350],
+      [125, 175, 3, 332, 350, 350],
+      [185, 235, 5, 332, 350, 350],
+      [245, 295, 2, 332, 350, 350],
+      [305, 355, 4, 332, 350, 350]
     ]
   },
   {
     players: 2,
     balls: 1,
     walls: [
-      [120, 230],
-      [300, 50]
+      [120, 230, 350, 350],
+      [300, 50, 350, 350]
     ],
     goals: [
-      [50, 120, 1, 332],
-      [230, 300, 2, 332]
+      [50, 120, 1, 332, 350, 350],
+      [230, 300, 2, 332, 350, 350]
     ]
   },
   {
     players: 10,
-    balls: 1,
+    balls: 4,
     walls: [
-      [33, 39],
-      [69, 75],
-      [105, 111],
-      [141, 147],
-      [177, 183],
-      [213, 219],
-      [249, 255],
-      [285, 291],
-      [321, 327],
-      [357, 3]
+      [33, 39, 350, 350],
+      [69, 75, 350, 350],
+      [105, 111, 350, 350],
+      [141, 147, 350, 350],
+      [177, 183, 350, 350],
+      [213, 219, 350, 350],
+      [249, 255, 350, 350],
+      [285, 291, 350, 350],
+      [321, 327, 350, 350],
+      [357, 3, 350, 350]
     ],
     goals: [
-      [3, 33, 1, 332],
-      [39, 69, 3, 332],
-      [75, 105, 5, 332],
-      [111, 141, 7, 332],
-      [147, 177, 9, 332],
-      [183, 213, 2, 332],
-      [219, 249, 4, 332],
-      [255, 285, 6, 332],
-      [291, 321, 8, 332],
-      [327, 357, 10, 332]
+      [3, 33, 1, 332, 350, 350],
+      [39, 69, 3, 332, 350, 350],
+      [75, 105, 5, 332, 350, 350],
+      [111, 141, 7, 332, 350, 350],
+      [147, 177, 9, 332, 350, 350],
+      [183, 213, 2, 332, 350, 350],
+      [219, 249, 4, 332, 350, 350],
+      [255, 285, 6, 332, 350, 350],
+      [291, 321, 8, 332, 350, 350],
+      [327, 357, 10, 332, 350, 350]
     ]
   },
   {
     players: 4,
     balls: 2,
     walls: [
-      [130, 220],
-      [310, 40]
+      [130, 220, 350, 350],
+      [310, 40, 350, 350]
     ],
     goals: [
-      [40, 130, 1, 332],
-      [220, 310, 2, 332],
-      [40, 130, 3, 332],
-      [220, 310, 4, 332]
+      [40, 130, 1, 332, 350, 350],
+      [220, 310, 2, 332, 350, 350],
+      [40, 130, 3, 332, 350, 350],
+      [220, 310, 4, 332, 350, 350]
+    ]
+  },
+  {
+    players: 4,
+    balls: 2,
+    walls: [
+      [45, 67.5, 350, 189.5],
+      [67.5, 90, 189.5, 350],
+      [135, 157.5, 350, 189.5],
+      [157.5, 180, 189.5, 350],
+      [225, 247.5, 350, 189.5],
+      [247.5, 270, 189.5, 350],
+      [315, 337.5, 350, 189.5],
+      [337.5, 0, 189.5, 350]
+    ],
+    goals: [
+      [0, 45, 1, 332, 350, 350],
+      [180, 225, 2, 332, 350, 350],
+      [90, 135, 3, 332, 350, 350],
+      [270, 315, 4, 332, 350, 350]
     ]
   }
 ]
@@ -333,7 +354,7 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
   this.countdown = function() {
     timer = setInterval(function(id) {
       gameServer.rooms[id].time--;
-    }, 100, this.id);
+    }, 1000, this.id);
   }
 
   this.assignAttributesToPlayer = function(player) { // Donner des attributs à un jouer qui à rejoint le jeu
@@ -653,12 +674,12 @@ var Map = function(walls, goals) {
   this.goals = {};
 
   for(var i = 0; i < walls.length; i++) {
-    var wall = new Wall(walls[i][0], walls[i][1]);
+    var wall = new Wall(walls[i][0], walls[i][1], walls[i][2], walls[i][3]);
     this.walls[wall.id] = wall;
   }
 
   for(var i = 0; i < goals.length; i++) {
-    var goal = new Goal(goals[i][0], goals[i][1], goals[i][2], goals[i][3]);
+    var goal = new Goal(goals[i][0], goals[i][1], goals[i][2], goals[i][3], goals[i][4], goals[i][5]);
     this.goals[goal.localId] = goal;
   }
 
@@ -717,14 +738,14 @@ var Map = function(walls, goals) {
 //         WALL          //
 ///////////////////////////
 
-var Wall = function(angle1, angle2) {
+var Wall = function(angle1, angle2, depth1, depth2) {
   this.id = random(1, 1000000);
   this.angle1 = angle1;
   this.angle2 = angle2;
-  this.x1 = Math.cos(angle1 * Math.PI / 180) * 350;
-  this.y1 = Math.sin(angle1 * Math.PI / 180) * 350;
-  this.x2 = Math.cos(angle2 * Math.PI / 180) * 350;
-  this.y2 = Math.sin(angle2 * Math.PI / 180) * 350;
+  this.x1 = Math.cos(angle1 * Math.PI / 180) * depth1;
+  this.y1 = Math.sin(angle1 * Math.PI / 180) * depth1;
+  this.x2 = Math.cos(angle2 * Math.PI / 180) * depth2;
+  this.y2 = Math.sin(angle2 * Math.PI / 180) * depth2;
 
   // if(this.angle2 == 0) {
   //   this.rotation = this.angle2 + (360 - this.angle1);
@@ -753,15 +774,15 @@ Wall.list = {}
 //         GOAL          //
 ///////////////////////////
 
-var Goal = function(angle1, angle2, localId, pos) {
+var Goal = function(angle1, angle2, localId, pos, depth1, depth2) {
   this.id = random(1, 1000000);
   this.localId = localId;
   this.angle1 = angle1;
   this.angle2 = angle2;
-  this.x1 = Math.cos(angle1 * Math.PI / 180) * 350;
-  this.y1 = Math.sin(angle1 * Math.PI / 180) * 350;
-  this.x2 = Math.cos(angle2 * Math.PI / 180) * 350;
-  this.y2 = Math.sin(angle2 * Math.PI / 180) * 350;
+  this.x1 = Math.cos(angle1 * Math.PI / 180) * depth1;
+  this.y1 = Math.sin(angle1 * Math.PI / 180) * depth1;
+  this.x2 = Math.cos(angle2 * Math.PI / 180) * depth2;
+  this.y2 = Math.sin(angle2 * Math.PI / 180) * depth2;
   this.px1 = Math.cos(angle1 * Math.PI / 180) * pos;
   this.py1 = Math.sin(angle1 * Math.PI / 180) * pos;
   this.px2 = Math.cos(angle2 * Math.PI / 180) * pos;

@@ -172,7 +172,7 @@ var onSocket = function(socket) {
       if(m == 0 && s < 10) {
         timer.style.color = "#f44336";
       }
-    }, 100);
+    }, 1000);
   });
 
   socket.on('endGame', function() {
