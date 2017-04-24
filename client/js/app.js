@@ -37,6 +37,7 @@ var FOCUSED = false;
 var STARTED = false;
 var TIME = 120;
 var TIMER;
+// var hamza;
 
 var Img = {};
 Img.player = new Image();
@@ -622,6 +623,15 @@ Ball.list = {};
 //        DRAWING        //
 ///////////////////////////
 
+// var drawBonus = function(){
+//   console.log("bite");
+//   ctx.fillStyle = "#FF0000";
+//   var x = random(-200,200);
+//   var y = random(-200,200);
+//   ctx.fillRect(x,y,20,20);
+//   console.log("suck a dick nygga");
+// }
+
 var drawWalls = function() {
   ctx.strokeStyle = 'black';
   //ctx.fillStyle = 'white';
@@ -748,6 +758,8 @@ function gameLoop() {
   drawWalls();
   drawGoals();
   drawPlayers();
+  // hamza = window.setTimeout(drawBonus, 1000);
+  // clearTimeout(hamza);
   // for(var i in Ball.list) {
   //   var p1 = Ball.list[i];
   //   for(var j in Ball.list) {

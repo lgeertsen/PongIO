@@ -157,8 +157,8 @@ var GameServer = function() {
   // Fontion pour créer un nouveau jeu pour un joueur
   this.createGame = function(player) {
     var mode = random(0, MODES.length);
-    //var room = new Game(MODES[mode], player);  // Creation du jeu
-    var room = new Game(MODES[4], player);
+    var room = new Game(MODES[mode], player);  // Creation du jeu
+    //var room = new Game(MODES[4], player);
 
     this.rooms[room.id] = room;  // Ajouter le jeu au liste des jeux
 
@@ -528,7 +528,7 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
       var i = 0;
       while(!interception && i < 1000) {
         interception = b.update(this.players, this.map.walls, this.map.goals, true);
-        i++
+        i++;
       }
 
       if(interception) {
@@ -544,15 +544,63 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
           var p = this.players[g.localId];
           if(p.isAI) {
             //console.log("interception at: " + interception.x + " " + interception.y);
-            var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
-            if(!p.destination || i < p.distance) {
-              p.destination = d;
-              p.distance = i;
+            var maximum = {}, difference = {}, difference2 = {};
+            for(var i in this.map.goals) {
+              var w = this.map.goals[i];
+              for(var j in this.players){
+                var pl = this.players[j];
+                difference.x1 = Math.sqrt(Math.pow((w.x1-pl.x),2)+Math.pow((w.y1-pl.y),2));
+                difference.x2 = Math.sqrt(Math.pow((w.x2-pl.x),2)+ Math.pow((w.y2-pl.y),2));
+                if(difference.x1>=difference.x2 && maximum.d<=difference.x1){
+                  maximum.d = difference.x1;
+                  maximum.x = w.x1;
+                  maximum.y = w.y1;
+                }
+                if(difference.x2>=difference.x1 && maximum.d<=difference.x2){
+                  maximum.d = difference.x2;
+                  maximum.x = w.x1;
+                  maximum.y = w.y1;
+                }
+              }
+            }
+              for(var i in this.balls) {
+                var ball = this.balls[i];
+                var ac =  Math.sqrt(Math.pow((g.x2-interception.y), 2) + Math.pow((g.x2-interception.x), 2));
+                var ab =  Math.sqrt(Math.pow((ball.y-interception.y), 2) + Math.pow((ball.x-interception.x), 2));
+                var bc =  Math.sqrt(Math.pow((ball.y-g.y2), 2) + Math.pow((ball.x-g .x2), 2));
+                var alphaprime = Math.acos((Math.pow(ab,2)-Math.pow(ac,2)-Math.pow(bc,2))/(-2*ac*bc));
+                bc = Math.sqrt(Math.pow((maximum.y1-ball.y), 2) + Math.pow((maximum.x1-ball.x), 2));
+                ab = Math.sqrt(Math.pow((interception.y-maximum.y1), 2) + Math.pow((interception.x-maximum.x1), 2));
+                ac = Math.sqrt(Math.pow((interception.y-ball.y), 2) + Math.pow((interception.x-ball.x), 2));
+                var beta = Math.acos((Math.pow(ab,2)-Math.pow(ac,2)-Math.pow(bc,2))/(-2*ac*bc));
+                var xprime = 0;
+                while(xprime<31 && (Math.tan((60*xprime)/30)*ball.y)!=(xprime-ball.x)){
+                  xprime++;
+                }
+                if(xprime!=31){
+                  interception.x = interception.x - xprime;
+                  var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
+                  if(!p.destination || i < p.distance) {
+                    p.destination = d;
+                    p.distance = i;
+                  }
+                  console.log("append");
+                }else{
+                  var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
+                  if(!p.destination || i < p.distance) {
+                    p.destination = d;
+                    p.distance = i;
+                  }
+                }
+                //var dist = ((angle-90)/60)*(2*p.width);
+              //   p.destination = dist;
+              //   p.distance = i;
+              // }
+                //p.destination = Math.sqrt(Math.pow(Math.cos(angle)-g.x2,2)+Math.pow(Math.sin(angle)-g.y2,2));
+              //  p.distance = i;
+              }
             }
           }
-        }
-      }
-
       for(var i in this.players) {
         var p = this.players[i];
         if(p.isAI && !p.destination) {
@@ -562,6 +610,7 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
       }
     }
   }
+}
 
   // Fonction pour le mise a jour des joueurs
   this.updatePlayers = function() {
