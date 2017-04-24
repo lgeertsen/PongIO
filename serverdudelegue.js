@@ -1,4 +1,5 @@
-this.ai = function() {
+//Fonction pour la gestion de l'ia
+  this.ai = function() {
     for(var i in this.balls) {
       var ball = this.balls[i];
       var b = new Ball();
@@ -23,25 +24,19 @@ this.ai = function() {
           //   p.destination = this.position;
           //   p.distance = i;
           // }
-          return;
         } else {
-          // var g = this.map.goals[interception.id];
+          var g = this.map.goals[interception.id];
           //console.log("found interception in goal " + g.localId);
-          // var p = this.players[g.localId];
-          //if(p.isAI) {
+          var p = this.players[g.localId];
+          if(p.isAI) {
             //console.log("interception at: " + interception.x + " " + interception.y);
-            // var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
-            // if(!p.destination || i < p.distance) {
-            //   p.destination = d;
-            //   p.distance = i;
-            // }
             var maximum = {}, difference = {}, difference2 = {};
             for(var i in this.map.goals) {
               var w = this.map.goals[i];
               for(var j in this.players){
-                var p = this.players[j];
-                difference.x1 = Math.sqrt(Math.pow((w.x1-p.x),2)+Math.pow((w.y1-p.y),2));
-                difference.x2 = Math.sqrt(Math.pow((w.x2-p.x),2)+ Math.pow((w.y2-p.y),2));
+                var pl = this.players[j];
+                difference.x1 = Math.sqrt(Math.pow((w.x1-pl.x),2)+Math.pow((w.y1-pl.y),2));
+                difference.x2 = Math.sqrt(Math.pow((w.x2-pl.x),2)+ Math.pow((w.y2-pl.y),2));
                 if(difference.x1>=difference.x2 && maximum.d<=difference.x1){
                   maximum.d = difference.x1;
                   maximum.x = w.x1;
@@ -54,27 +49,44 @@ this.ai = function() {
                 }
               }
             }
-            var g = this.map.goals[interception.id];
-            var p = this.players[g.localId];
-            if(p.isAI){
-            for(var i in this.balls) {
-              var ball = this.balls[i];
-              var ac =  Math.sqrt(Math.pow((w.y2-p.y), 2) + Math.pow((w.x2-p.x), 2));
-              var ab =  Math.sqrt(Math.pow((ball.y-p.y), 2) + Math.pow((ball.x-p.x), 2));
-              var bc =  Math.sqrt(Math.pow((ball.y-w.y2), 2) + Math.pow((ball.x-w.x2), 2));
-              interception.angle = Math.acos((Math.pow(ab,2)-Math.pow(ac,2)-Math.pow(bc,2))/(-2*ac*bc));
-              bc = Math.sqrt(Math.pow((ball.y-interception.y), 2) + Math.pow((ball.x-interception.x), 2));
-              ab = Math.sqrt(Math.pow((ball.y-maximum.y), 2) + Math.pow((ball.x-maximum.x), 2));
-              ac = Math.sqrt(Math.pow((interception.y-maximum.y), 2) + Math.pow((interception.x-maximum.x), 2));
-              var angle = Math.acos((Math.pow(ab,2)-Math.pow(ac,2)-Math.pow(bc,2))/(-2*ac*bc)) + interception.angle;
-              var dist = ((angle-90)/60)*p.width;
-              p.destination = dist;
-              p.distance = i;
+              for(var i in this.balls) {
+                var ball = this.balls[i];
+                var ac =  Math.sqrt(Math.pow((g.x2-interception.y), 2) + Math.pow((g.x2-interception.x), 2));
+                var ab =  Math.sqrt(Math.pow((ball.y-interception.y), 2) + Math.pow((ball.x-interception.x), 2));
+                var bc =  Math.sqrt(Math.pow((ball.y-g.y2), 2) + Math.pow((ball.x-g .x2), 2));
+                var alphaprime = Math.acos((Math.pow(ab,2)-Math.pow(ac,2)-Math.pow(bc,2))/(-2*ac*bc));
+                bc = Math.sqrt(Math.pow((maximum.y1-ball.y), 2) + Math.pow((maximum.x1-ball.x), 2));
+                ab = Math.sqrt(Math.pow((interception.y-maximum.y1), 2) + Math.pow((interception.x-maximum.x1), 2));
+                ac = Math.sqrt(Math.pow((interception.y-ball.y), 2) + Math.pow((interception.x-ball.x), 2));
+                var beta = Math.acos((Math.pow(ab,2)-Math.pow(ac,2)-Math.pow(bc,2))/(-2*ac*bc));
+                var xprime = 0;
+                while(xprime<31 && (Math.tan((60*xprime)/30)*ball.y)!=(xprime-ball.x)){
+                  xprime++;
+                }
+                if(xprime!=31){
+                  interception.x = interception.x - xprime;
+                  var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
+                  if(!p.destination || i < p.distance) {
+                    p.destination = d;
+                    p.distance = i;
+                  }
+                  console.log("append");
+                }else{
+                  var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
+                  if(!p.destination || i < p.distance) {
+                    p.destination = d;
+                    p.distance = i;
+                  }
+                }
+                //var dist = ((angle-90)/60)*(2*p.width);
+              //   p.destination = dist;
+              //   p.distance = i;
+              // }
+                //p.destination = Math.sqrt(Math.pow(Math.cos(angle)-g.x2,2)+Math.pow(Math.sin(angle)-g.y2,2));
+              //  p.distance = i;
+              }
             }
           }
-        }
-      }
-
       for(var i in this.players) {
         var p = this.players[i];
         if(p.isAI && !p.destination) {
@@ -84,6 +96,12 @@ this.ai = function() {
       }
     }
   }
+}
+  var drawBonus = function(){
+  ctx.clearRect(-200, -200, 200, 200);
+  setctx.fillStyle = "#FF0000";
+  ctx.fillRect(random(-200,200),random(-200,200),20,20);
+}
 // Mettre bibliothèque express dans une variable
 var express = require('express');
 // Creation d'une application express
