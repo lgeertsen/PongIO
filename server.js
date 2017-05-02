@@ -275,27 +275,27 @@ var MODES = [
       [40, 130, 3, 332, 350, 350],
       [220, 310, 4, 332, 350, 350]
     ]
-  },
-  {
-    players: 4,
-    balls: 2,
-    walls: [
-      [45, 67.5, 350, 189.5],
-      [67.5, 90, 189.5, 350],
-      [135, 157.5, 350, 189.5],
-      [157.5, 180, 189.5, 350],
-      [225, 247.5, 350, 189.5],
-      [247.5, 270, 189.5, 350],
-      [315, 337.5, 350, 189.5],
-      [337.5, 0, 189.5, 350]
-    ],
-    goals: [
-      [0, 45, 1, 332, 350, 350],
-      [180, 225, 2, 332, 350, 350],
-      [90, 135, 3, 332, 350, 350],
-      [270, 315, 4, 332, 350, 350]
-    ]
   }
+  // {
+  //   players: 4,
+  //   balls: 2,
+  //   walls: [
+  //     [45, 67.5, 350, 189.5],
+  //     [67.5, 90, 189.5, 350],
+  //     [135, 157.5, 350, 189.5],
+  //     [157.5, 180, 189.5, 350],
+  //     [225, 247.5, 350, 189.5],
+  //     [247.5, 270, 189.5, 350],
+  //     [315, 337.5, 350, 189.5],
+  //     [337.5, 0, 189.5, 350]
+  //   ],
+  //   goals: [
+  //     [0, 45, 1, 332, 350, 350],
+  //     [180, 225, 2, 332, 350, 350],
+  //     [90, 135, 3, 332, 350, 350],
+  //     [270, 315, 4, 332, 350, 350]
+  //   ]
+  // }
 ]
 
 // Une objet de la classe game gère un jeu
@@ -321,10 +321,13 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
     return balls; // Renvoyer la liste des balls
   }
   this.balls = this.constructBalls();     // Création de tout les balls pour le jeu
+  this.bonus = {};
+  this.bonusCounter = 0;
 
   this.initPack = { // Le pack de initialization
     players: [],
-    balls: []
+    balls: [],
+    bonus: []
   };
   this.removePack = []; // Le pack pour le remove
 
@@ -486,11 +489,20 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
     });
   }
 
+  this.pushBonusToInitPack = function(bonus) {
+    this.initPack.bonus.push({
+      id: bonus.id,
+      x: bonus.x,
+      y: bonus.y
+    });
+  }
+
   // Fonction pour envoyer le pack d'initialization au joueurs
   this.initPlayers = function() {
     this.sendPackage('init', this.initPack); // Appel de la fonction pour envoyer le packet
     this.initPack.players = []; // Vider la liste des joueurs dans le pack d'initialization
     this.initPack.balls = []; // Vider la liste des balls dans le pack d'initialization
+    this.initPack.bonus = [];
   }
 
   // Fonction pour la mise a jour du jeu
@@ -507,10 +519,22 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
     }; // Creation d'un pack
     pack.players = this.updatePlayers(); // Mettre a jour les joueurs et mettre les données dans le pack
     pack.balls = this.updateBalls(); // Mettre a jour les balls et mettre les données dans le pack
+    this.addBonus();
     this.sendPackage('update', pack); // Envoyer le pack au joueurs
   }
 
   this.count = 0;
+
+  this.addBonus = function() {
+    if(this.bonusCounter < 180) {
+      this.bonusCounter++;
+    } else {
+      this.bonusCounter = 0;
+      var bonus = new Bonus();
+      this.bonus[bonus.id] = bonus;
+      this.pushBonusToInitPack(bonus);
+    }
+  }
 
   //Fonction pour la gestion de l'ia
   this.ai = function() {
@@ -584,7 +608,7 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
                     p.destination = d;
                     p.distance = i;
                   }
-                  console.log("append");
+                  // console.log("append");
                 }else{
                   var d = Math.sqrt(Math.pow(interception.x-g.x2, 2) + Math.pow(interception.y-g.y2, 2));
                   if(!p.destination || i < p.distance) {
@@ -702,6 +726,21 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
   }
   this.ai();
 }//Fin de la classe game
+
+
+
+///////////////////////////
+//          BONUS        //
+///////////////////////////
+
+var BONUS = [];
+
+var Bonus = function() {
+  this.id = random(1, 1000000);
+  this.x = random(-200, 200);
+  this.y = random(-200, 200);
+  return this;
+}
 
 
 

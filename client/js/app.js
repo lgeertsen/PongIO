@@ -231,6 +231,9 @@ var onSocket = function(socket) {
     for(var i in data.balls) {
       new Ball(data.balls[i]);
     }
+    for(var i in data.bonus) {
+      new Bonus(data.bonus[i]);
+    }
   });
 
   socket.on('update', function(data) {
@@ -617,6 +620,15 @@ var Ball = function(initPack) {
 
 Ball.list = {};
 
+var Bonus = function(initPack) {
+  this.id = initPack.id;
+  this.x = initPack.x;
+  this.y = initPack.y;
+  Bonus.list[this.id] = this;
+  console.log(this);
+}
+Bonus.list = {};
+
 
 
 ///////////////////////////
@@ -691,6 +703,14 @@ var drawPlayers = function() {
   }
 }
 
+var drawBonus = function() {
+  for(var i in Bonus.list) {
+    var b = Bonus.list[i];
+    ctx.fillStyle = 'red';
+    ctx.fillRect(b.x-10, b.y-10, 20, 20);
+  }
+}
+
 var drawBalls = function() {
   for(var i in Ball.list) {
     var b = Ball.list[i];
@@ -758,6 +778,7 @@ function gameLoop() {
   drawWalls();
   drawGoals();
   drawPlayers();
+  drawBonus();
   // hamza = window.setTimeout(drawBonus, 1000);
   // clearTimeout(hamza);
   // for(var i in Ball.list) {
