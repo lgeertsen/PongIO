@@ -9,6 +9,9 @@ var ctx = c.getContext('2d');
 var cui = c2.getContext('2d');
 ctx.translate(400, 400);
 cui.translate(400, 400);
+//cui.textAlign = "center";
+cui.font = "18px Arial";
+
 c.style.height = screenHeight + "px";
 c.style.width = screenHeight + "px";
 c.style.marginLeft = ((screenWidth-screenHeight)/2) + "px";
@@ -43,6 +46,7 @@ Img.player = new Image();
 Img.player.src = '/client/img/player.png';
 
 var leaderboard = document.getElementById('leaderboard-content');
+var endGame = document.getElementById('endGame');
 
 var particles;
 
@@ -93,6 +97,8 @@ var startGame = function() {
   socket = io();
 
   socket.emit('newPlayer', { username: playerName, color: color.id });
+
+  FOCUSED = false;
 
   onSocket(socket);
   animloop();
@@ -155,13 +161,17 @@ var onSocket = function(socket) {
     gameText.innerHTML = data;
   });
 
-  socket.on('start', function() {
+  socket.on('time', function(data) {
+    TIME = data;
+  });
+
+  socket.on('start', function(data) {
+    TIME = data;
     gameText.innerHTML = '';
     STARTED = true;
     TIMER = setInterval(function() {
       TIME--;
       var s = TIME % 60;
-      console.log(s);
       var m = (TIME - s) / 60;
       timer.innerHTML = m + ":";
       if(s < 10) {
@@ -176,20 +186,28 @@ var onSocket = function(socket) {
   });
 
   socket.on('endGame', function() {
-    for(var i in Player.list) {
-      delete Player.list[i];
-    }
-    for(var i in Ball.list) {
-      delete Ball.list[i];
-    }
+    console.log("END GAME");
+    endGame.style.display = "block";
+    clearInterval(TIMER);
     ROTATED = false;
     STARTED = false;
     TIME = 120;
-    leaderboard.innerHTML = '';
-    timer.style.color = "black";
-    timer.innerHTML = "2:00";
-    ctx.resetTransform();
-    ctx.translate(400, 400);
+    setTimeout(function() {
+      endGame.style.opacity = "1";
+      setTimeout(function() {
+        for(var i in Player.list) {
+          delete Player.list[i];
+        }
+        for(var i in Ball.list) {
+          delete Ball.list[i];
+        }
+        leaderboard.innerHTML = '';
+        timer.style.color = "black";
+        timer.innerHTML = "2:00";
+        ctx.resetTransform();
+        ctx.translate(400, 400);
+      }, 2000);
+    }, 2000);
   });
 
   socket.on('addToChat', function(data) {
@@ -287,6 +305,8 @@ var onSocket = function(socket) {
   });
 
   socket.on('map', function(data) {
+    endGame.style.display = "none";
+    endGame.style.opacity = "0";
     MAP.playerY = data.playerY;
     MAP.walls = data.walls;
     MAP.goals = data.goals;
@@ -371,7 +391,16 @@ sendMessage = function() {
     }
   }
   chatInput.value = '';
-  chatInput.reset();
+  //chatInput.reset();
+  chatInput.blur();
+  FOCUSED = false;
+}
+
+focusOnChat = function() {
+  chatForm.reset();
+  chatInput.focus('');
+  //chatInput.value = '';
+  FOCUSED = true;
 }
 
 
@@ -763,6 +792,19 @@ function gameLoop() {
   // }
 }
 
+document.onkeypress = function(event) {
+  // if((event.keyCode === 84 || event.keyCode === 116) && !FOCUSED) {
+  //   focusOnChat();
+  if(event.keyCode === 13) {
+    if(FOCUSED) {
+      sendMessage();
+    } else {
+      focusOnChat();
+    }
+    //chatForm.submit();
+  }
+}
+
 document.onkeydown = function(event) {
   if(event.keyCode === 81) {
     Player.list[ID].moveLeft = true;
@@ -772,17 +814,13 @@ document.onkeydown = function(event) {
     Player.list[ID].moveLeft = false;
     Player.list[ID].moveRight = true;
     socket.emit('keyPress', { inputId: 'right', state: true});
-  } else if(event.keyCode == 84) {
-    if(!FOCUSED) {
-      chatInput.focus();
-      chatInput.value = "";
-      FOCUSED = true;
-    }
-  } else if(event.keyCode == 13) {
-    //chatForm.submit();
-    sendMessage();
   }
-
+  //  else if(event.keyCode == 84) {
+  //   if(!FOCUSED) {
+  //     chatInput.focus();
+  //     chatInput.value = "";
+  //     FOCUSED = true;
+  //   }
   // if(event.keyCode === 68) { //d
   //   socket.emit('keyPress', { inputId: 'right', state: true });
   // } else

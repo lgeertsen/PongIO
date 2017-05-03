@@ -100,7 +100,7 @@ getEquation = function(x1, y1, x2, y2) {
   return { a: a, b: b};
 }
 
-var NAMES = ["ninja", "chair", "pancake", "statue", "unicorn", "rainbows", "laser", "senor", "bunny", "captain", "nibblets", "cupcake", "carrot", "gnomes", "glitter", "potato", "salad", "toejam", "curtains", "beets", "toilet", "exorcism", "stick figures", "mermaid eggs", "sea barnacles", "dragons", "jellybeans", "snakes", "dolls", "bushes", "cookies", "apples", "ice cream", "ukulele", "kazoo", "banjo", "opera singer", "circus", "trampoline", "carousel", "carnival", "locomotive", "hot air balloon", "praying mantis", "animator", "artisan", "artist", "colorist", "inker", "coppersmith", "director", "designer", "flatter", "stylist", "leadman", "limner", "make-up artist", "model", "musician", "penciller", "producer", "scenographer", "set decorator", "silversmith", "teacher", "auto mechanic", "beader", "bobbin boy", "filling station attendant", "foreman",  "mechanic", "miller", "moldmaker", "panel beater", "patternmaker", "plant operator", "plumber", "sawfiler", "shop foreman", "soaper", "stationary engineer", "wheelwright", "woodworkers"];
+var NAMES = ["ninja", "chair", "pancake", "statue", "unicorn", "rainbows", "laser", "senor", "bunny", "captain", "nibblets", "cupcake", "carrot", "gnomes", "glitter", "potato", "salad", "toejam", "curtains", "beets", "toilet", "exorcism", "stick", "mermaid", "dragons", "jellybeans", "snakes", "dolls", "bushes", "cookies", "apples", "ice cream", "ukulele", "kazoo", "banjo", "circus", "trampoline", "carousel", "carnival", "locomotive", "balloon", "mantis", "animator", "artisan", "artist", "colorist", "inker", "coppersmith", "director", "designer", "flatter", "stylist", "leadman", "limner", "artist", "model", "musician", "penciller", "producer", "scenographer", "decorator", "silversmith", "teacher", "mechanic", "beader", "foreman",  "mechanic", "miller", "moldmaker", "patternmaker", "plumber", "sawfiler", "soaper", "wheelwright", "woodworkers"];
 
 
 
@@ -131,9 +131,14 @@ console.log(":: Express :: Listening on port 3000");
 var GameServer = function() {
   this.roomCount = 0;  // Nombre de jeux en cours
   this.rooms = {};     // Liste des jeux
+  this.players = {};
+  this.time = 120;
 
   // Fonction pour trouver un jeu pour un joueur
   this.findGame = function(player) {
+    if(!this.players[player.id]) {
+      this.players[player.id] = player;
+    }
     console.log("looking for a game. We have: " + this.roomCount + " games.");
 
     if(this.roomCount) { // Si il y a des jeux
@@ -163,31 +168,78 @@ var GameServer = function() {
 
     this.roomCount++;  // Incrementer le compteur des jeux
 
-    room.start();
+    if(this.roomCount == 1) {
+      this.startGames();
+    }
+    //room.start();
   } // fin createGame
 
-  this.endGame = function(id, players) {
-    clearInterval(timer);
-    delete this.rooms[id];
-    this.roomCount--;
-    for(var i in players) {
-      if(!players[i].isAI) {
-        SOCKET_LIST[players[i].id].emit('endGame');
-        this.findGame(players[i]);
+  this.countdown = function() {
+    timer = setInterval(function() {
+      gameServer.time--;
+      for(var i in gameServer.rooms) {
+        gameServer.rooms[i].sendPackage('time', gameServer.time);
       }
+    }, 100);
+  }
+
+  this.startGames = function() {
+    countdown[0] = setTimeout(function() {
+      for(var i in gameServer.rooms) {
+        gameServer.rooms[i].sendPackage('countdown', 'READY?');
+      }
+      countdown[1] = setTimeout(function() {
+        for(var i in gameServer.rooms) {
+          gameServer.rooms[i].sendPackage('countdown', 'SET');
+        }
+        countdown[2] = setTimeout(function() {
+          for(var i in gameServer.rooms) {
+            gameServer.rooms[i].sendPackage('countdown', 'Go!');
+          }
+          countdown[3] = setTimeout(function() {
+            for(var i in gameServer.rooms) {
+              gameServer.rooms[i].sendPackage('start', gameServer.time);
+              gameServer.rooms[i].started = true;
+              gameServer.countdown();
+            }
+          }, 1000);
+        }, 1000);
+      }, 1000);
+    }, 1000);
+  }
+
+  this.endGames = function() {
+    clearInterval(timer);
+    for(var i in this.rooms) {
+      delete this.rooms[i];
     }
+    this.roomCount = 0;
+    this.time = 120;
+    for(var i in this.players) {
+      SOCKET_LIST[this.players[i].id].emit('endGame');
+    }
+    setTimeout(function() {
+      console.log("JOINING NEW GAMES");
+      for(var i in gameServer.players) {
+        gameServer.findGame(Player.list[i]);
+      }
+    }, 10000);
   }
 
   // Mettre a jour tout les chambres
   this.updateRooms = function() {
-    for(var i in gameServer.rooms) { // Pour chaque chambre
-      var room = gameServer.rooms[i];
-      room.initPlayers(); // Si il y a un nouveau joueur, ce fonction envoie les donnees du nouveau joueur a tout les joueurs
-      if(room.started) {
-        room.update(); // Envoie la mise du jeu à tout les joueurs (coordonées des joueurs, du ball)
-      }
-      room.removePlayers(); // Si un joueur quitte le jeu, dire aux autres qui à quitté
-    } // fin for
+    if(gameServer.time == 0) {
+      gameServer.endGames();
+    } else {
+      for(var i in gameServer.rooms) { // Pour chaque chambre
+        var room = gameServer.rooms[i];
+        room.initPlayers(); // Si il y a un nouveau joueur, ce fonction envoie les donnees du nouveau joueur a tout les joueurs
+        if(room.started) {
+          room.update(); // Envoie la mise du jeu à tout les joueurs (coordonées des joueurs, du ball)
+        }
+        room.removePlayers(); // Si un joueur quitte le jeu, dire aux autres qui à quitté
+      } // fin for
+    }
   } // fin updateRooms
 }; // fin classe GameServer
 
@@ -307,35 +359,6 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
   };
   this.removePack = []; // Le pack pour le remove
 
-  this.start = function() {
-    countdown[0] = setTimeout(function(id) {
-      gameServer.rooms[id].sendPackage('countdown', 'READY?');
-      countdown[1] = setTimeout(function(id) {
-        gameServer.rooms[id].sendPackage('countdown', '3');
-        countdown[2] = setTimeout(function(id) {
-          gameServer.rooms[id].sendPackage('countdown', '2');
-          countdown[3] = setTimeout(function(id) {
-            gameServer.rooms[id].sendPackage('countdown', '1');
-            countdown[4] = setTimeout(function(id) {
-              gameServer.rooms[id].sendPackage('countdown', 'GO!');
-              countdown[5] = setTimeout(function(id) {
-                gameServer.rooms[id].sendPackage('start', '3');
-                gameServer.rooms[id].started = true;
-                gameServer.rooms[id].countdown();
-              }, 1000, id);
-            }, 1000, id);
-          }, 1000, id);
-        }, 1000, id);
-      }, 1000, id);
-    }, 1000, this.id);
-  }
-
-  this.countdown = function() {
-    timer = setInterval(function(id) {
-      gameServer.rooms[id].time--;
-    }, 100, this.id);
-  }
-
   this.assignAttributesToPlayer = function(player) { // Donner des attributs à un jouer qui à rejoint le jeu
     player.roomId = this.id;  // Attribution de l'id du jeu au variable roomId du joueur
     player.minY = this.wallWidth; // Limite min de déplacement pour le joueur
@@ -378,6 +401,9 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
     }
     for(var i in this.balls) { // Pour tout les balls
       this.pushBallToInitPack(this.balls[i]); // Mettre le ball dans le pack d'initialization
+    }
+    if(this.started) {
+      this.sendPackage('start', gameServer.time);
     }
     this.initPlayers();
   } // fin joinPlayer
@@ -475,11 +501,6 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
   // Fonction pour la mise a jour du jeu
   this.update = function() {
     //console.log("TIMER:" + this.time);
-    if(this.time == 0) {
-      clearInterval(countdown);
-      gameServer.endGame(this.id, this.players);
-      return
-    }
     var pack = {
       players: [],
       balls: []
@@ -887,6 +908,7 @@ var Ball = function(game) {
       this.spdY = Math.sin((90 + angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
       this.player = foundIntercept.id;
       this.color = gameServer.rooms[this.game].players[foundIntercept.id].color;
+      console.log(COLORS[this.color].name);
     } else {
       this.spdX = Math.cos((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
       this.spdY = Math.sin((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
