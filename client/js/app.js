@@ -40,6 +40,7 @@ var FOCUSED = false;
 var STARTED = false;
 var TIME = 120;
 var TIMER;
+// var hamza;
 
 var Img = {};
 Img.player = new Image();
@@ -182,7 +183,7 @@ var onSocket = function(socket) {
       if(m == 0 && s < 10) {
         timer.style.color = "#f44336";
       }
-    }, 100);
+    }, 1000);
   });
 
   socket.on('endGame', function() {
@@ -247,6 +248,9 @@ var onSocket = function(socket) {
     }
     for(var i in data.balls) {
       new Ball(data.balls[i]);
+    }
+    for(var i in data.bonus) {
+      new Bonus(data.bonus[i]);
     }
   });
 
@@ -645,11 +649,29 @@ var Ball = function(initPack) {
 
 Ball.list = {};
 
+var Bonus = function(initPack) {
+  this.id = initPack.id;
+  this.x = initPack.x;
+  this.y = initPack.y;
+  Bonus.list[this.id] = this;
+  console.log(this);
+}
+Bonus.list = {};
+
 
 
 ///////////////////////////
 //        DRAWING        //
 ///////////////////////////
+
+// var drawBonus = function(){
+//   console.log("bite");
+//   ctx.fillStyle = "#FF0000";
+//   var x = random(-200,200);
+//   var y = random(-200,200);
+//   ctx.fillRect(x,y,20,20);
+//   console.log("suck a dick nygga");
+// }
 
 var drawWalls = function() {
   ctx.strokeStyle = 'black';
@@ -707,6 +729,14 @@ var drawPlayers = function() {
     // ctx.lineTo(p.x2, p.y2);
     // ctx.closePath();
     // ctx.stroke();
+  }
+}
+
+var drawBonus = function() {
+  for(var i in Bonus.list) {
+    var b = Bonus.list[i];
+    ctx.fillStyle = 'red';
+    ctx.fillRect(b.x-10, b.y-10, 20, 20);
   }
 }
 
@@ -777,6 +807,9 @@ function gameLoop() {
   drawWalls();
   drawGoals();
   drawPlayers();
+  drawBonus();
+  // hamza = window.setTimeout(drawBonus, 1000);
+  // clearTimeout(hamza);
   // for(var i in Ball.list) {
   //   var p1 = Ball.list[i];
   //   for(var j in Ball.list) {
