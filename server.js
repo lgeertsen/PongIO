@@ -1,10 +1,6 @@
-// Mettre bibliothèque express dans une variable
 var express = require('express');
-// Creation d'une application express
 var app = express();
-// Creation d'un server express
 var server = require('http').Server(app);
-// Utilisation de socket.io par le server express
 var io = require('socket.io')(server, {});
 
 var SOCKET_LIST = {};
@@ -81,12 +77,6 @@ intercept = function(x1, y1, x2, y2, x3, y3, x4, y4, debug) { // fonction pour c
           angle = 180 - angle;
         }
 
-        if(angle > 180) {
-          console.log("FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK");
-        }
-
-        //console.log("intercept angle: " + angle);
-
         return { x: x, y: y, angle: angle};
       }
     }
@@ -162,85 +152,85 @@ var GameServer = function() {
   // Fontion pour créer un nouveau jeu pour un joueur
   this.createGame = function(player) {
     var mode = random(0, MODES.length);
-    var room = new Game(MODES[mode], player);  // Creation du jeu
+    var room = new Game(MODES[0], player);  // Creation du jeu
     //var room = new Game(MODES[4], player);
 
     this.rooms[room.id] = room;  // Ajouter le jeu au liste des jeux
 
     this.roomCount++;  // Incrementer le compteur des jeux
 
-    if(this.roomCount == 1) {
-      this.startGames();
-    }
+    // if(this.roomCount == 1) {
+    //   this.startGames();
+    // }
     //room.start();
   } // fin createGame
 
-  this.countdown = function() {
-    timer = setInterval(function() {
-      gameServer.time--;
-      for(var i in gameServer.rooms) {
-        gameServer.rooms[i].sendPackage('time', gameServer.time);
-      }
-    }, 100);
-  }
-
-  this.startGames = function() {
-    countdown[0] = setTimeout(function() {
-      for(var i in gameServer.rooms) {
-        gameServer.rooms[i].sendPackage('countdown', 'READY?');
-      }
-      countdown[1] = setTimeout(function() {
-        for(var i in gameServer.rooms) {
-          gameServer.rooms[i].sendPackage('countdown', 'SET');
-        }
-        countdown[2] = setTimeout(function() {
-          for(var i in gameServer.rooms) {
-            gameServer.rooms[i].sendPackage('countdown', 'Go!');
-          }
-          countdown[3] = setTimeout(function() {
-            for(var i in gameServer.rooms) {
-              gameServer.rooms[i].sendPackage('start', gameServer.time);
-              gameServer.rooms[i].started = true;
-              gameServer.countdown();
-            }
-          }, 1000);
-        }, 1000);
-      }, 1000);
-    }, 1000);
-  }
-
-  this.endGames = function() {
-    clearInterval(timer);
-    for(var i in this.rooms) {
-      delete this.rooms[i];
-    }
-    this.roomCount = 0;
-    this.time = 120;
-    for(var i in this.players) {
-      SOCKET_LIST[this.players[i].id].emit('endGame');
-    }
-    setTimeout(function() {
-      console.log("JOINING NEW GAMES");
-      for(var i in gameServer.players) {
-        gameServer.findGame(Player.list[i]);
-      }
-    }, 10000);
-  }
+  // this.countdown = function() {
+  //   timer = setInterval(function() {
+  //     gameServer.time--;
+  //     for(var i in gameServer.rooms) {
+  //       gameServer.rooms[i].sendPackage('time', gameServer.time);
+  //     }
+  //   }, 100);
+  // }
+  //
+  // this.startGames = function() {
+  //   countdown[0] = setTimeout(function() {
+  //     for(var i in gameServer.rooms) {
+  //       gameServer.rooms[i].sendPackage('countdown', 'READY?');
+  //     }
+  //     countdown[1] = setTimeout(function() {
+  //       for(var i in gameServer.rooms) {
+  //         gameServer.rooms[i].sendPackage('countdown', 'SET');
+  //       }
+  //       countdown[2] = setTimeout(function() {
+  //         for(var i in gameServer.rooms) {
+  //           gameServer.rooms[i].sendPackage('countdown', 'Go!');
+  //         }
+  //         countdown[3] = setTimeout(function() {
+  //           for(var i in gameServer.rooms) {
+  //             gameServer.rooms[i].sendPackage('start', gameServer.time);
+  //             gameServer.rooms[i].started = true;
+  //             gameServer.countdown();
+  //           }
+  //         }, 1000);
+  //       }, 1000);
+  //     }, 1000);
+  //   }, 1000);
+  // }
+  //
+  // this.endGames = function() {
+  //   clearInterval(timer);
+  //   for(var i in this.rooms) {
+  //     delete this.rooms[i];
+  //   }
+  //   this.roomCount = 0;
+  //   this.time = 120;
+  //   for(var i in this.players) {
+  //     SOCKET_LIST[this.players[i].id].emit('endGame');
+  //   }
+  //   setTimeout(function() {
+  //     console.log("JOINING NEW GAMES");
+  //     for(var i in gameServer.players) {
+  //       gameServer.findGame(Player.list[i]);
+  //     }
+  //   }, 10000);
+  // }
 
   // Mettre a jour tout les chambres
   this.updateRooms = function() {
-    if(gameServer.time == 0) {
-      gameServer.endGames();
-    } else {
+    // if(gameServer.time == 0) {
+    //   gameServer.endGames();
+    // } else {
       for(var i in gameServer.rooms) { // Pour chaque chambre
         var room = gameServer.rooms[i];
         room.initPlayers(); // Si il y a un nouveau joueur, ce fonction envoie les donnees du nouveau joueur a tout les joueurs
-        if(room.started) {
+        //if(room.started) {
           room.update(); // Envoie la mise du jeu à tout les joueurs (coordonées des joueurs, du ball)
-        }
+        //}
         room.removePlayers(); // Si un joueur quitte le jeu, dire aux autres qui à quitté
       } // fin for
-    }
+    //}
   } // fin updateRooms
 }; // fin classe GameServer
 
@@ -313,21 +303,21 @@ var MODES = [
       [291, 321, 8, 332, 350, 350],
       [327, 357, 10, 332, 350, 350]
     ]
-  },
-  {
-    players: 4,
-    balls: 2,
-    walls: [
-      [130, 220, 350, 350],
-      [310, 40, 350, 350]
-    ],
-    goals: [
-      [40, 130, 1, 332, 350, 350],
-      [220, 310, 2, 332, 350, 350],
-      [40, 130, 3, 332, 350, 350],
-      [220, 310, 4, 332, 350, 350]
-    ]
   }
+  // {
+  //   players: 4,
+  //   balls: 2,
+  //   walls: [
+  //     [130, 220, 350, 350],
+  //     [310, 40, 350, 350]
+  //   ],
+  //   goals: [
+  //     [40, 130, 1, 332, 350, 350],
+  //     [220, 310, 2, 332, 350, 350],
+  //     [40, 130, 3, 332, 350, 350],
+  //     [220, 310, 4, 332, 350, 350]
+  //   ]
+  // }
   // {
   //   players: 4,
   //   balls: 2,
@@ -373,8 +363,9 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
     return balls; // Renvoyer la liste des balls
   }
   this.balls = this.constructBalls();     // Création de tout les balls pour le jeu
-  this.bonus = {};
+  this.bonus = [];
   this.bonusCounter = 0;
+
 
   this.initPack = { // Le pack de initialization
     players: [],
@@ -383,34 +374,34 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
   };
   this.removePack = []; // Le pack pour le remove
 
-  this.start = function() {
-    countdown[0] = setTimeout(function(id) {
-      gameServer.rooms[id].sendPackage('countdown', 'READY?');
-      countdown[1] = setTimeout(function(id) {
-        gameServer.rooms[id].sendPackage('countdown', '3');
-        countdown[2] = setTimeout(function(id) {
-          gameServer.rooms[id].sendPackage('countdown', '2');
-          countdown[3] = setTimeout(function(id) {
-            gameServer.rooms[id].sendPackage('countdown', '1');
-            countdown[4] = setTimeout(function(id) {
-              gameServer.rooms[id].sendPackage('countdown', 'GO!');
-              countdown[5] = setTimeout(function(id) {
-                gameServer.rooms[id].sendPackage('start', '3');
-                gameServer.rooms[id].started = true;
-                gameServer.rooms[id].countdown();
-              }, 1000, id);
-            }, 1000, id);
-          }, 1000, id);
-        }, 1000, id);
-      }, 1000, id);
-    }, 1000, this.id);
-  }
+  // this.start = function() {
+  //   countdown[0] = setTimeout(function(id) {
+  //     gameServer.rooms[id].sendPackage('countdown', 'READY?');
+  //     countdown[1] = setTimeout(function(id) {
+  //       gameServer.rooms[id].sendPackage('countdown', '3');
+  //       countdown[2] = setTimeout(function(id) {
+  //         gameServer.rooms[id].sendPackage('countdown', '2');
+  //         countdown[3] = setTimeout(function(id) {
+  //           gameServer.rooms[id].sendPackage('countdown', '1');
+  //           countdown[4] = setTimeout(function(id) {
+  //             gameServer.rooms[id].sendPackage('countdown', 'GO!');
+  //             countdown[5] = setTimeout(function(id) {
+  //               gameServer.rooms[id].sendPackage('start', '3');
+  //               gameServer.rooms[id].started = true;
+  //               gameServer.rooms[id].countdown();
+  //             }, 1000, id);
+  //           }, 1000, id);
+  //         }, 1000, id);
+  //       }, 1000, id);
+  //     }, 1000, id);
+  //   }, 1000, this.id);
+  // }
 
-  this.countdown = function() {
-    timer = setInterval(function(id) {
-      gameServer.rooms[id].time--;
-    }, 1000, this.id);
-  }
+  // this.countdown = function() {
+  //   timer = setInterval(function(id) {
+  //     gameServer.rooms[id].time--;
+  //   }, 1000, this.id);
+  // }
 
   this.assignAttributesToPlayer = function(player) { // Donner des attributs à un jouer qui à rejoint le jeu
     player.roomId = this.id;  // Attribution de l'id du jeu au variable roomId du joueur
@@ -548,7 +539,8 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
     this.initPack.bonus.push({
       id: bonus.id,
       x: bonus.x,
-      y: bonus.y
+      y: bonus.y,
+      color: bonus.color
     });
   }
 
@@ -569,19 +561,46 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
     }; // Creation d'un pack
     pack.players = this.updatePlayers(); // Mettre a jour les joueurs et mettre les données dans le pack
     pack.balls = this.updateBalls(); // Mettre a jour les balls et mettre les données dans le pack
+    this.updateBonus();
     this.addBonus();
     this.sendPackage('update', pack); // Envoyer le pack au joueurs
   }
 
   this.count = 0;
 
+  this.updateBonus = function() {
+    for(var i in this.balls) {
+      var ball = this.balls[i];
+      var loop = true;
+      var j = 0;
+      var l = this.bonus.length
+      while(loop && j < l) {
+        var bonus = this.bonus[j];
+        var d = Math.sqrt(Math.pow(ball.x-bonus.x, 2) + Math.pow(ball.y-bonus.y, 2));
+        if(d < 30 && ball.player != 0) {
+          this.useBonus(ball.player, this.bonus[j]);
+          this.sendPackage('removeBonus', this.bonus[j].id);
+          for(var k = j+1; k < l; k++) {
+            this.bonus[k-1] = this.bonus[k];
+          }
+        }
+        j++;
+      }
+    }
+  }
+
+  this.useBonus = function(playerId, bonus) {
+    this.players[playerId].width = bonus.width;
+    this.players[playerId].bonus = true;
+  }
+
   this.addBonus = function() {
-    if(this.bonusCounter < 180) {
+    if(this.bonusCounter < 300 || this.bonus.length > 10) {
       this.bonusCounter++;
     } else {
       this.bonusCounter = 0;
       var bonus = new Bonus();
-      this.bonus[bonus.id] = bonus;
+      this.bonus[this.bonus.length] = bonus;
       this.pushBonusToInitPack(bonus);
     }
   }
@@ -703,6 +722,7 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
           position: player.position,
           x: player.x,
           y: player.y,
+          width: player.width,
           destination: player.destination});
         } else {
           pack.push({
@@ -710,6 +730,7 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
           position: player.position,
           x: player.x,
           y: player.y,
+          width: player.width,
           moveLeft: player.moveLeft,
           moveRight: player.moveRight});
         }
@@ -783,12 +804,24 @@ var Game = function(mode, player) { // Le premier joueur est passer à la créat
 //          BONUS        //
 ///////////////////////////
 
-var BONUS = [];
+var BONUS = [
+  {
+    color: 'green',
+    width: 50
+  },
+  {
+    color: 'red',
+    width: 20
+  }
+];
 
 var Bonus = function() {
+  var type = random(0, BONUS.length);
   this.id = random(1, 1000000);
   this.x = random(-200, 200);
   this.y = random(-200, 200);
+  this.color = BONUS[type].color;
+  this.width = BONUS[type].width;
   return this;
 }
 
@@ -1046,10 +1079,18 @@ var Ball = function(game) {
       this.spdY = Math.sin((90 + angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
       this.player = foundIntercept.id;
       this.color = gameServer.rooms[this.game].players[foundIntercept.id].color;
-      console.log(COLORS[this.color].name);
+      //console.log(COLORS[this.color].name);
     } else {
-      this.spdX = Math.cos((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
-      this.spdY = Math.sin((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+      if(foundIntercept.angle > 70 && foundIntercept.angle <= 90) {
+        this.spdX = Math.cos((70 + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+        this.spdY = Math.sin((70 + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+      } else if(foundIntercept.angle < 110 && foundIntercept.angle > 90) {
+        this.spdX = Math.cos((110 + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+        this.spdY = Math.sin((110 + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+      } else {
+        this.spdX = Math.cos((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+        this.spdY = Math.sin((foundIntercept.angle + foundIntercept.rotation) / 180 * Math.PI) * this.speed;
+      }
     }
     this.x += this.spdX * 0.1;
     this.y += this.spdY * 0.1;
@@ -1196,6 +1237,8 @@ var Player = function(socket, username, color, isAI) {
   //this.color = "rgb(" + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ", " + Math.round(random(0,255)) + ")";
   //this.color = 'white';
   this.score = 0;
+  this.bonus = false;
+  this.bonusCounter = 0;
 
   this.moveRight = false;
   this.moveLeft = false;
@@ -1238,7 +1281,25 @@ var Player = function(socket, username, color, isAI) {
     return point;
   }
 
+  this.reset = function() {
+    this.width = 30;
+  }
+
   this.update = function() {
+    if(this.bonus) {
+      if(this.bonusCounter < 600) {
+        this.bonusCounter++;
+      } else {
+        this.bonus = false;
+        this.bonusCounter = 0;
+        this.reset();
+      }
+    }
+    if(this.position < this.width) {
+      this.position = this.width;
+    } else if(this.position > this.goal.length-this.width) {
+      this.position = this.goal.length-this.width;
+    }
     if(this.isAI && this.destination) {
       if(Math.abs(this.destination - this.position) > 20 || this.position < this.width+this.speed || this.position > this.goal.length-this.width-this.speed) {
         if (this.destination < this.position) {

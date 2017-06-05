@@ -158,58 +158,58 @@ var onSocket = function(socket) {
     socket.close();
   });
 
-  socket.on('countdown', function(data) {
-    gameText.innerHTML = data;
-  });
+  // socket.on('countdown', function(data) {
+  //   gameText.innerHTML = data;
+  // });
+  //
+  // socket.on('time', function(data) {
+  //   TIME = data;
+  // });
 
-  socket.on('time', function(data) {
-    TIME = data;
-  });
+  // socket.on('start', function(data) {
+  //   TIME = data;
+  //   gameText.innerHTML = '';
+  //   STARTED = true;
+  //   TIMER = setInterval(function() {
+  //     TIME--;
+  //     var s = TIME % 60;
+  //     var m = (TIME - s) / 60;
+  //     timer.innerHTML = m + ":";
+  //     if(s < 10) {
+  //       timer.innerHTML += "0" + s;
+  //     } else {
+  //       timer.innerHTML += s;
+  //     }
+  //     if(m == 0 && s < 10) {
+  //       timer.style.color = "#f44336";
+  //     }
+  //   }, 1000);
+  // });
 
-  socket.on('start', function(data) {
-    TIME = data;
-    gameText.innerHTML = '';
-    STARTED = true;
-    TIMER = setInterval(function() {
-      TIME--;
-      var s = TIME % 60;
-      var m = (TIME - s) / 60;
-      timer.innerHTML = m + ":";
-      if(s < 10) {
-        timer.innerHTML += "0" + s;
-      } else {
-        timer.innerHTML += s;
-      }
-      if(m == 0 && s < 10) {
-        timer.style.color = "#f44336";
-      }
-    }, 1000);
-  });
-
-  socket.on('endGame', function() {
-    console.log("END GAME");
-    endGame.style.display = "block";
-    clearInterval(TIMER);
-    ROTATED = false;
-    STARTED = false;
-    TIME = 120;
-    setTimeout(function() {
-      endGame.style.opacity = "1";
-      setTimeout(function() {
-        for(var i in Player.list) {
-          delete Player.list[i];
-        }
-        for(var i in Ball.list) {
-          delete Ball.list[i];
-        }
-        leaderboard.innerHTML = '';
-        timer.style.color = "black";
-        timer.innerHTML = "2:00";
-        ctx.resetTransform();
-        ctx.translate(400, 400);
-      }, 2000);
-    }, 2000);
-  });
+  // socket.on('endGame', function() {
+  //   console.log("END GAME");
+  //   endGame.style.display = "block";
+  //   clearInterval(TIMER);
+  //   ROTATED = false;
+  //   STARTED = false;
+  //   TIME = 120;
+  //   setTimeout(function() {
+  //     endGame.style.opacity = "1";
+  //     setTimeout(function() {
+  //       for(var i in Player.list) {
+  //         delete Player.list[i];
+  //       }
+  //       for(var i in Ball.list) {
+  //         delete Ball.list[i];
+  //       }
+  //       leaderboard.innerHTML = '';
+  //       timer.style.color = "black";
+  //       timer.innerHTML = "2:00";
+  //       ctx.resetTransform();
+  //       ctx.translate(400, 400);
+  //     }, 2000);
+  //   }, 2000);
+  // });
 
   socket.on('addToChat', function(data) {
     //chatText.innerHTML+= '<div>' + data + '</div>';
@@ -262,6 +262,9 @@ var onSocket = function(socket) {
         p.position = pack.position;
         p.x = pack.x;
         p.y = pack.y;
+        if(pack.width !== undefined) {
+          p.width = pack.width;
+        }
         if(pack.destination !== undefined) {
           p.destination = pack.destination;
         }
@@ -306,6 +309,10 @@ var onSocket = function(socket) {
       }
       delete Player.list[data[i]];
     }
+  });
+
+  socket.on('removeBonus', function(data) {
+    delete Bonus.list[data];
   });
 
   socket.on('map', function(data) {
@@ -531,6 +538,8 @@ var Ball = function(initPack) {
   this.spdY = initPack.spdY;
   this.color = initPack.color;
 
+  console.log("Ball added");
+
   this.update = function() {
     var newPos = this.accelerate();
     var item, foundIntercept, goal, rotation, id;
@@ -653,6 +662,7 @@ var Bonus = function(initPack) {
   this.id = initPack.id;
   this.x = initPack.x;
   this.y = initPack.y;
+  this.color = initPack.color;
   Bonus.list[this.id] = this;
   console.log(this);
 }
@@ -735,8 +745,12 @@ var drawPlayers = function() {
 var drawBonus = function() {
   for(var i in Bonus.list) {
     var b = Bonus.list[i];
-    ctx.fillStyle = 'red';
-    ctx.fillRect(b.x-10, b.y-10, 20, 20);
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 20, 0, 2*Math.PI, true);
+    ctx.fill();
+    ctx.closePath();
+    //ctx.fillRect(b.x-10, b.y-10, 20, 20);
   }
 }
 
@@ -744,7 +758,11 @@ var drawBalls = function() {
   for(var i in Ball.list) {
     var b = Ball.list[i];
     var w = h = b.radius * 2;
-    ctx.fillStyle = b.color;
+    if(b.color >= 0) {
+      ctx.fillStyle = COLORS[b.color-1].hexValue;
+    } else {
+      ctx.fillStyle = b.color;
+    }
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.radius, 0, 2*Math.PI, true);
     ctx.fill();
@@ -795,19 +813,19 @@ function gameLoop() {
     clearInterval(TIMER);
   }
   ctx.clearRect(-600, -600, 1200, 1200);
-  if(STARTED) {
+  //if(STARTED) {
     for(var i in Ball.list) {
       Ball.list[i].update();
     }
     for(var i in Player.list) {
       Player.list[i].update();
     }
-    drawBalls();
-  }
+  //}
   drawWalls();
   drawGoals();
   drawPlayers();
   drawBonus();
+  drawBalls();
   // hamza = window.setTimeout(drawBonus, 1000);
   // clearTimeout(hamza);
   // for(var i in Ball.list) {
