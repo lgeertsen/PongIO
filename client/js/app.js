@@ -228,6 +228,10 @@ var onSocket = function(socket) {
       avatar.className = "avatar";
       avatar.style.background = COLORS[Player.list[data.id].color - 1].hexValue;
       message.appendChild(avatar);
+      var name = document.createElement('h6');
+      name.className = "name";
+      name.innerHTML = Player.list[data.id].username;
+      message.appendChild(name);
       //sheet.addRule('#messages .message::before', 'border-top: 6px solid ' + COLORS[Player.list[data.id].color - 1].hexValue);
     }
     //$('<div class="message message-personal">' + msg + '</div>').appendTo($('.mCSB_container')).addClass('new');
